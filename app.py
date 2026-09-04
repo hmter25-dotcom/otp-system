@@ -4,6 +4,7 @@ import imaplib
 import email
 import re
 from bs4 import BeautifulSoup
+from collections import Counter
 
 app = Flask(__name__)
 CORS(app)
@@ -66,9 +67,16 @@ def get_otp():
             
             email_content = get_text_from_email(msg)
             
-            otp_match = re.search(r'\b\d{4,6}\b', email_content)
-            if otp_match:
-                return jsonify({"status": "success", "otp": otp_match.group(0)})
+            otps = re.findall(r'\b\d{4,6}\b', email_content)
+            
+            # استبعاد أرقام السنوات المحددة تماماً فقط لتجنب استبعاد الأكواد الصحيحة
+            ignore_list = ['2024', '2025', '2026', '2027', '1446', '1447', '1448', '1449']
+            valid_otps = [num for num in otps if num not in ignore_list]
+            
+            if valid_otps:
+                # اختيار الرقم الذي تكرر أكثر من غيره في الإيميل (وهو كود التفعيل دائماً)
+                best_otp = Counter(valid_otps).most_common(1)[0][0]
+                return jsonify({"status": "success", "otp": best_otp})
                 
         return jsonify({"status": "waiting", "message": "جاري انتظار الكود..."})
     except Exception as e:
