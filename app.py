@@ -8,9 +8,10 @@ from bs4 import BeautifulSoup
 app = Flask(__name__)
 CORS(app)
 
-EMAIL = "elevaraa76@outlook.com"
-PASSWORD = "bupbrtvagoovjsny"
-IMAP_SERVER = "imap-mail.outlook.com"
+# اكتب إيميل الجيميل الخاص بك بين علامتي التنصيص في السطر التالي:
+EMAIL = "اكتب_ايميل_الجيميل_هنا@gmail.com"
+PASSWORD = "slevzjaclxtswqla"
+IMAP_SERVER = "imap.gmail.com"
 
 def get_text_from_email(msg):
     text_content = ""
