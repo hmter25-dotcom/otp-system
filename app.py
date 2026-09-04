@@ -8,8 +8,7 @@ from bs4 import BeautifulSoup
 app = Flask(__name__)
 CORS(app)
 
-# اكتب إيميل الجيميل الخاص بك بين علامتي التنصيص في السطر التالي:
-EMAIL = "اكتب_ايميل_الجيميل_هنا@gmail.com"
+EMAIL = "hmter25@gmail.com"
 PASSWORD = "slevzjaclxtswqla"
 IMAP_SERVER = "imap.gmail.com"
 
