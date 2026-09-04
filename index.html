@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة استلام الكود</title>
+    <style>
+        body { background-color: #f4f6f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 400px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .title { font-size: 15px; font-weight: bold; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .email-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 14px; color: #334155; }
+        .otp-box { text-align: center; font-size: 32px; letter-spacing: 12px; font-weight: bold; color: #0f172a; margin: 25px 0; }
+        .status { text-align: center; font-size: 13px; color: #64748b; }
+        .success-card { border: 1px solid #bbf7d0; background-color: #f0fdf4; }
+        .success-title { color: #166534; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- قسم الإيميل -->
+        <div class="card">
+            <div class="title">📧 Account Email</div>
+            <div class="email-box">elevaraa76@outlook.com</div>
+        </div>
+
+        <!-- قسم الكود -->
+        <div class="card success-card">
+            <div class="title success-title">🛡️ Login Verification Code</div>
+            <div class="otp-box" id="otp-display">- - - -</div>
+            <div class="status" id="status-text">يرجى الانتظار، جاري البحث عن الكود...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://otp-system-gfa0.onrender.com/get-otp";
+
+        async function getOTP() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('otp-display').innerText = data.otp;
+                    document.getElementById('status-text').innerText = "تم سحب الكود بنجاح!";
+                } else {
+                    document.getElementById('status-text').innerText = "لا يوجد كود جديد، جاري الانتظار...";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        setInterval(getOTP, 5000);
+        getOTP();
+    </script>
+</body>
+</html>
