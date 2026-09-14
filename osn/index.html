@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة التحقق الرسمية - OSN+</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #f8fafc;
+            letter-spacing: 0.5px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+        .email-box {
+            font-size: 13px;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            direction: ltr;
+        }
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            direction: ltr;
+        }
+        .otp-digit {
+            width: 55px;
+            height: 65px;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: #38bdf8;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .otp-digit:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+        .status {
+            font-size: 14px;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #94a3b8;
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>OSN+ Verification</h2>
+        <p class="subtitle">رمز التحقق الخاص بحسابك</p>
+        
+        <div class="email-box">
+            elevaraa8@elevara1.shop
+        </div>
+
+        <!-- 4 خانات احترافية لعرض الكود -->
+        <div class="otp-container">
+            <input type="text" class="otp-digit" id="d1" maxlength="1" readonly>
+            <input type="text" class="otp-digit" id="d2" maxlength="1" readonly>
+            <input type="text" class="otp-digit" id="d3" maxlength="1" readonly>
+            <input type="text" class="otp-digit" id="d4" maxlength="1" readonly>
+        </div>
+        
+        <div class="status" id="status-text">
+            <span>جاري البحث عن الكود</span><span class="spinner"></span>
+        </div>
+    </div>
+
+    <script>
+        async function fetchOTP() {
+            try {
+                let response = await fetch('https://otp-system.onrender.com/get-otp');
+                let data = await response.json();
+                
+                let d1 = document.getElementById('d1');
+                let d2 = document.getElementById('d2');
+                let d3 = document.getElementById('d3');
+                let d4 = document.getElementById('d4');
+                let statusText = document.getElementById('status-text');
+
+                if (data.status === 'success' && data.otp && data.otp.length === 4) {
+                    d1.value = data.otp[0] || '';
+                    d2.value = data.otp[1] || '';
+                    d3.value = data.otp[2] || '';
+                    d4.value = data.otp[3] || '';
+                    
+                    statusText.innerHTML = "تم سحب الرمز بنجاح ✔";
+                    statusText.style.color = "#4ade80";
+                } else {
+                    statusText.innerHTML = 'في انتظار وصول الرمز الجديد<span class="spinner"></span>';
+                    statusText.style.color = "#cbd5e1";
+                }
+            } catch (error) {
+                console.error('Error fetching OTP:', error);
+            }
+        }
+
+        // تحديث تلقائي كل 3 ثواني
+        setInterval(fetchOTP, 3000);
+        fetchOTP();
+    </script>
+</body>
+</html>
