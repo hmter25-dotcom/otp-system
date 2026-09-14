@@ -7,9 +7,10 @@ import re
 app = Flask(__name__)
 CORS(app)
 
-IMAP_SERVER = "imap.kuku.lu"
-EMAIL_ACCOUNT = "elevaraa8@elevara1.shop"
-EMAIL_PASSWORD = "zw1C[QLt*UYF]S"
+# إعدادات جيميل الرسمية
+IMAP_SERVER = "imap.gmail.com"
+EMAIL_ACCOUNT = "elevaraa8@gmail.com"
+EMAIL_PASSWORD = "zcfuvmpgibqatcer"  # كلمة مرور التطبيق بدون مسافات
 
 def fetch_latest_otp():
     try:
@@ -17,7 +18,7 @@ def fetch_latest_otp():
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("inbox")
 
-        # البحث عن كل الرسائل بدون استثناء
+        # البحث عن آخر الرسائل
         status, messages = mail.search(None, "ALL")
         if status != "OK":
             return None, None
@@ -26,8 +27,8 @@ def fetch_latest_otp():
         if not email_ids:
             return None, None
 
-        # فحص آخر 5 رسائل للتأكد من التقاط الرمز فوراً
-        for email_id in reversed(email_ids[-5:]):
+        # فحص أحدث 3 رسائل للبحث عن الرمز
+        for email_id in reversed(email_ids[-3:]):
             status, msg_data = mail.fetch(email_id, "(RFC822)")
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
@@ -49,7 +50,7 @@ def fetch_latest_otp():
                         if payload:
                             body = payload.decode('utf-8', errors='ignore')
 
-                    # البحث عن أول 4 أرقام متتالية في نص الرسالة
+                    # البحث عن أول 4 أرقام متتالية في الرسالة (رمز التحقق)
                     match_4 = re.search(r'\b\d{4}\b', body)
                     if match_4:
                         mail.logout()
