@@ -3,59 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSN+ Verification - التحقق من الحساب</title>
+    <title>بوابة استلام رمز OSN+</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: #0b0e14; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { background: #151a23; border: 1px solid #222b38; border-radius: 16px; padding: 30px 20px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        h1 { font-size: 24px; color: #ffffff; margin-bottom: 8px; font-weight: 700; }
-        .subtitle { font-size: 14px; color: #9ba1a6; margin-bottom: 20px; }
-        .email-box { background: #1c2430; border: 1px solid #2f3b4c; border-radius: 10px; padding: 12px; margin-bottom: 25px; }
-        .email-label { font-size: 12px; color: #8c9bae; margin-bottom: 4px; }
-        .email-value { font-size: 15px; color: #00d2ff; font-weight: 600; }
-        .otp-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
-        .otp-input { width: 55px; height: 60px; font-size: 26px; font-weight: bold; text-align: center; background: #1c2430; border: 2px solid #2f3b4c; border-radius: 12px; color: #ffffff; outline: none; }
-        .status-btn { background: #1c2430; border: 1px solid #2f3b4c; color: #9ba1a6; padding: 12px; border-radius: 10px; font-size: 14px; width: 100%; font-weight: 600; }
-        .status-btn.success { background: rgba(0, 255, 128, 0.1); border-color: rgba(0, 255, 128, 0.3); color: #00ff80; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .premium-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 20px;
+        }
+
+        .header-section h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header-section p {
+            color: #94a3b8;
+            font-size: 15px;
+        }
+
+        .steps-container {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .steps-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            background: #38bdf8;
+            color: #020617;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .otp-wrapper {
+            text-align: center;
+        }
+
+        .otp-title {
+            font-size: 16px;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .otp-input {
+            width: 60px;
+            height: 70px;
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .otp-input.active {
+            border-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(51, 65, 85, 0.5);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #94a3b8;
+            transition: all 0.4s ease;
+            width: 100%;
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .loader {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #94a3b8;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>OSN+ Verification</h1>
-        <p class="subtitle">رمز التحقق الخاص بحسابك</p>
-        <div class="email-box">
-            <div class="email-label">البريد الإلكتروني للحساب:</div>
-            <div class="email-value">elevaraa8@gmail.com</div>
+
+    <div class="premium-card">
+        
+        <!-- الترويسة -->
+        <div class="header-section">
+            <h1>بوابة الدخول | OSN+</h1>
+            <p>نظام آلي لاستلام رموز التحقق فورياً</p>
         </div>
-        <!-- تم إضافة dir="ltr" هنا عشان الأرقام تترتب من اليسار لليمين بشكل صحيح -->
-        <div class="otp-container" dir="ltr">
-            <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
-            <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
-            <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
-            <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
+
+        <!-- خطوات الاستخدام للعميل -->
+        <div class="steps-container">
+            <div class="steps-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                طريقة تسجيل الدخول:
+            </div>
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div>انسخ البريد الإلكتروني الذي استلمته في تفاصيل طلبك من المتجر.</div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div>افتح تطبيق OSN+ وأدخل البريد لطلب رمز الدخول (OTP).</div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div>انتظر لحظات، وسيظهر الرمز أمامك بالأسفل بشكل تلقائي.</div>
+            </div>
         </div>
-        <button class="status-btn" id="status-btn">جاري انتظار الرمز تلقائياً...</button>
+
+        <!-- خانات الكود -->
+        <div class="otp-wrapper">
+            <div class="otp-title">رمز التحقق الخاص بك:</div>
+            
+            <!-- تم الحفاظ على dir="ltr" لتظهر الأرقام مرتبة من اليسار لليمين -->
+            <div class="otp-container" dir="ltr">
+                <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
+                <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
+                <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
+                <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
+            </div>
+
+            <!-- حالة السحب -->
+            <div class="status-badge" id="status-badge">
+                <span class="loader" id="loader-icon"></span>
+                <span id="status-text">النظام بانتظار وصول الرمز...</span>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
+        
         function checkOtp() {
             fetch(RENDER_API)
                 .then(response => response.json())
                 .then(data => {
-                    const btn = document.getElementById("status-btn");
+                    const badge = document.getElementById("status-badge");
+                    const statusText = document.getElementById("status-text");
+                    const loader = document.getElementById("loader-icon");
+
                     if (data.status === "success" && data.otp) {
                         const code = data.otp.toString();
-                        for (let i = 0; i < 4; i++) { document.getElementById(`digit-${i}`).value = code[i] || ""; }
-                        btn.textContent = "✓ تم سحب الرمز بنجاح";
-                        btn.classList.add("success");
+                        
+                        // تعبئة الخانات وإضافة تأثير الإضاءة الخضراء
+                        for (let i = 0; i < 4; i++) { 
+                            let input = document.getElementById(`digit-${i}`);
+                            input.value = code[i] || ""; 
+                            input.classList.add("active");
+                        }
+                        
+                        // تغيير حالة الزر للنجاح
+                        badge.classList.add("success");
+                        statusText.textContent = "تم استلام الرمز بنجاح!";
+                        loader.style.display = "none";
                     } else {
-                        for (let i = 0; i < 4; i++) { document.getElementById(`digit-${i}`).value = ""; }
-                        btn.textContent = "جاري انتظار الرمز تلقائياً...";
-                        btn.classList.remove("success");
+                        // إعادة الخانات لوضع الانتظار
+                        for (let i = 0; i < 4; i++) { 
+                            let input = document.getElementById(`digit-${i}`);
+                            input.value = "-"; 
+                            input.classList.remove("active");
+                        }
+                        
+                        // إعادة حالة الزر للانتظار
+                        badge.classList.remove("success");
+                        statusText.textContent = "النظام بانتظار وصول الرمز...";
+                        loader.style.display = "inline-block";
                     }
                 }).catch(err => console.error("Error fetching OTP:", err));
         }
+        
+        // فحص الرمز كل ثانيتين
         setInterval(checkOtp, 2000);
         checkOtp();
     </script>
