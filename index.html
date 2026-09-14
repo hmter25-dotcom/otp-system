@@ -3,407 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة استلام رمز OSN+ | مجموعة متاجرنا</title>
+    <title>مجموعة متاجرنا | عالمك الرقمي المتكامل</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+
+        :root {
+            --bg-dark: #050b14;
+            --bg-card: rgba(13, 22, 39, 0.7);
+            --primary: #38bdf8;
+            --secondary: #818cf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Tajawal', sans-serif;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
         }
 
         body {
-            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
-            color: #f8fafc;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(129, 140, 248, 0.08), transparent 25%);
+        }
+
+        /* تأثير الخلفية الشبكية */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        /* الهيدر والشعارات */
+        header {
+            padding: 30px 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            animation: fadeInDown 1s ease;
+        }
+
+        .brand-logo {
+            height: 90px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            transition: transform 0.4s ease;
+        }
+
+        .brand-logo:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        /* القسم الرئيسي (Hero) */
+        .hero {
+            min-height: 70vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        /* قسم الشعارات */
-        .brands-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            animation: fadeInDown 0.8s ease;
-        }
-
-        .brand-logo {
-            height: 75px;
-            object-fit: contain;
-            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
-            transition: transform 0.3s ease;
-        }
-
-        .brand-logo:hover {
-            transform: scale(1.05);
-        }
-
-        .premium-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 28px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 460px;
-            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.1);
-            animation: fadeInUp 0.8s ease;
-        }
-
-        .header-section {
             text-align: center;
-            margin-bottom: 30px;
+            padding: 0 20px;
+            animation: fadeInUp 1s ease 0.3s backwards;
         }
 
-        .header-section h1 {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, #38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
         }
 
-        .header-section p {
-            color: #94a3b8;
-            font-size: 15px;
+        .hero p {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--text-muted);
+            max-width: 700px;
+            line-height: 1.8;
+            margin-bottom: 40px;
         }
 
-        .steps-container {
-            background: rgba(15, 23, 42, 0.4);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 35px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+        /* قسم المميزات */
+        .features {
+            padding: 80px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .steps-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .step-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 14px;
-            color: #cbd5e1;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .step-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .step-number {
-            background: linear-gradient(135deg, #38bdf8, #3b82f6);
-            color: #fff;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 700;
-            font-size: 13px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
-        }
-
-        .otp-wrapper {
+        .section-title {
             text-align: center;
-        }
-
-        .otp-title {
-            font-size: 17px;
-            color: #f1f5f9;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .otp-container {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .otp-input {
-            width: 65px;
-            height: 75px;
-            font-size: 34px;
+            font-size: 32px;
             font-weight: 800;
-            text-align: center;
-            background: #0f172a;
-            border: 2px solid #334155;
-            border-radius: 18px;
-            color: #ffffff;
-            outline: none;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
-        }
-
-        .otp-input.active {
-            border-color: #10b981;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), inset 0 2px 5px rgba(0,0,0,0.4);
-            color: #10b981;
-            transform: translateY(-2px);
-        }
-
-        .copy-btn {
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+            margin-bottom: 50px;
             color: #fff;
-            border: none;
-            border-radius: 16px;
-            padding: 16px 20px;
-            font-size: 17px;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            position: relative;
         }
 
-        .copy-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
         }
 
-        .copy-btn.copied {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
         }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: rgba(51, 65, 85, 0.4);
-            padding: 14px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #94a3b8;
-            width: 100%;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .status-badge.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border-color: rgba(16, 185, 129, 0.2);
-        }
-
-        /* قسم الدعم الفني المحدث */
-        .support-section {
-            margin-top: 30px;
+        .feature-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 24px;
             text-align: center;
-            padding-top: 25px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .support-text {
-            color: #e2e8f0;
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, rgba(56,189,248,0.1), rgba(129,140,248,0.1));
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 25px;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
             font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 6px;
+            line-height: 1.7;
         }
 
-        .support-subtext {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 16px;
+        /* بانر الدعم الفني */
+        .support-banner {
+            max-width: 1000px;
+            margin: 60px auto 100px;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 30px;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .support-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 60%);
+            animation: rotateBg 15s linear infinite;
+        }
+
+        .support-banner-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .support-banner h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .support-banner p {
+            color: var(--text-muted);
+            font-size: 16px;
+            margin-bottom: 30px;
         }
 
         .telegram-btn {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #2AABEE 0%, #229ED9 100%);
-            color: #ffffff;
+            gap: 12px;
+            background: linear-gradient(135deg, #2AABEE, #229ED9);
+            color: #fff;
             text-decoration: none;
-            padding: 12px 25px;
+            padding: 16px 40px;
             border-radius: 50px;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
-            box-shadow: 0 6px 15px rgba(42, 171, 238, 0.3);
             transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(42, 171, 238, 0.3);
+            direction: ltr;
         }
 
         .telegram-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(42, 171, 238, 0.4);
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 15px 35px rgba(42, 171, 238, 0.5);
         }
 
-        .loader {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #94a3b8;
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            display: inline-block;
-            animation: rotation 1s linear infinite;
+        /* الفوتر */
+        footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            font-size: 14px;
         }
 
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* الانيميشن */
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes rotateBg { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .brand-logo { height: 70px; }
+            header { gap: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- الشعارات -->
-    <div class="brands-container">
+    <div class="grid-bg"></div>
+
+    <header>
+        <!-- تأكد من وجود الصورتين في القائمة الرئيسية لجيت هاب بنفس هذه الأسماء -->
         <img src="image_22.png" alt="Elevaraa" class="brand-logo">
         <img src="image_21.png" alt="BoxUp" class="brand-logo">
-    </div>
+    </header>
 
-    <div class="premium-card">
-        
-        <div class="header-section">
-            <h1>بوابة استلام الرموز | OSN+</h1>
-            <p>نظام ذكي وآمن لاستلام رموز التحقق فورياً</p>
-        </div>
+    <section class="hero">
+        <h1>نبتكر عالمك الرقمي<br>بأسعار لا تُنافس</h1>
+        <p>نحن نقدم لك أفضل الاشتراكات الرقمية وخدمات الترفيه بأسعار تنافسية جداً. نجمع بين الجودة العالية، التسليم الفوري، والموثوقية التامة لنمنحك تجربة لا تُنسى.</p>
+    </section>
 
-        <div class="steps-container">
-            <div class="steps-title">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                طريقة تسجيل الدخول خطوة بخطوة:
-            </div>
-            <div class="step-item">
-                <div class="step-number">1</div>
-                <div>انسخ <b>البريد الإلكتروني</b> المرفق في تفاصيل طلبك من المتجر.</div>
-            </div>
-            <div class="step-item">
-                <div class="step-number">2</div>
-                <div>افتح تطبيق <b>OSN+</b>، وألصق البريد لطلب الرمز (OTP).</div>
-            </div>
-            <div class="step-item">
-                <div class="step-number">3</div>
-                <div>انتظر لحظات.. وسيظهر رمز الدخول المكون من 4 أرقام بالأسفل تلقائياً.</div>
-            </div>
-        </div>
-
-        <div class="otp-wrapper">
-            <div class="otp-title">رمز التحقق الخاص بك:</div>
+    <section class="features">
+        <h2 class="section-title">لماذا نحن خيارك الأول؟</h2>
+        <div class="features-grid">
             
-            <div class="otp-container" dir="ltr">
-                <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
-                <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
-                <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
-                <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <h3>تسليم فوري</h3>
+                <p>نقدّر وقتك. بمجرد إتمام الطلب، يتم تسليم اشتراكاتك الرقمية وخدماتك في لمح البصر وبشكل آلي ومضمون.</p>
             </div>
 
-            <!-- زر النسخ -->
-            <button class="copy-btn" id="copy-btn" onclick="copyCode()">
-                <svg id="copy-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span id="copy-text">نسخ الرمز</span>
-            </button>
-
-            <div class="status-badge" id="status-badge">
-                <span class="loader" id="loader-icon"></span>
-                <span id="status-text">النظام بانتظار إرسالك للرمز من التطبيق...</span>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <h3>أسعار تنافسية</h3>
+                <p>نلتزم بتقديم أفضل الباقات والاشتراكات بأقل الأسعار في السوق، لتستمتع بالترفيه دون القلق من التكلفة.</p>
             </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <h3>احترافية وأمان</h3>
+                <p>جميع خدماتنا واشتراكاتنا أصلية وآمنة 100%. نعمل باحترافية تامة لنضمن لك اشتراكاً مستقراً طوال فترة الباقة.</p>
+            </div>
+
         </div>
+    </section>
 
-        <!-- قسم الدعم الفني -->
-        <div class="support-section">
-            <div class="support-text">لو احتجت لأي مساعدة؟</div>
-            <div class="support-subtext">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
+    <section class="support-banner">
+        <div class="support-banner-content">
+            <h2>نحن هنا من أجلك دائماً!</h2>
+            <p>رضاك هو غايتنا. إذا كان لديك أي استفسار، مشكلة، أو تحتاج إلى مساعدة في اشتراكاتك، فريق الدعم الفني الخاص بنا متواجد على مدار الساعة لخدمتك باحترافية وسرعة.</p>
             <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                @elevaraa
+                <span>@elevaraa</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </a>
         </div>
+    </section>
 
-    </div>
+    <footer>
+        <p>جميع الحقوق محفوظة © 2024 | مجموعة متاجرنا للخدمات الرقمية</p>
+    </footer>
 
-    <script>
-        const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
-        let currentFetchedCode = ""; 
-        
-        function checkOtp() {
-            fetch(RENDER_API)
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.getElementById("status-badge");
-                    const statusText = document.getElementById("status-text");
-                    const loader = document.getElementById("loader-icon");
-                    const copyBtn = document.getElementById("copy-btn");
-
-                    if (data.status === "success" && data.otp) {
-                        const code = data.otp.toString();
-                        currentFetchedCode = code; 
-                        
-                        for (let i = 0; i < 4; i++) { 
-                            let input = document.getElementById(`digit-${i}`);
-                            input.value = code[i] || ""; 
-                            input.classList.add("active");
-                        }
-                        
-                        copyBtn.style.display = "flex";
-                        badge.classList.add("success");
-                        statusText.textContent = "تم استلام الرمز بنجاح! ✓";
-                        loader.style.display = "none";
-                    } else {
-                        currentFetchedCode = "";
-                        for (let i = 0; i < 4; i++) { 
-                            let input = document.getElementById(`digit-${i}`);
-                            input.value = "-"; 
-                            input.classList.remove("active");
-                        }
-                        
-                        copyBtn.style.display = "none";
-                        badge.classList.remove("success");
-                        statusText.textContent = "النظام بانتظار إرسالك للرمز من التطبيق...";
-                        loader.style.display = "inline-block";
-                    }
-                }).catch(err => console.error("Error fetching OTP:", err));
-        }
-
-        function copyCode() {
-            if (!currentFetchedCode) return;
-            navigator.clipboard.writeText(currentFetchedCode).then(() => {
-                const btn = document.getElementById("copy-btn");
-                const spanText = document.getElementById("copy-text");
-                const icon = document.getElementById("copy-icon");
-
-                btn.classList.add("copied");
-                spanText.textContent = "تم النسخ بنجاح! ✓";
-                icon.style.display = "none"; 
-
-                setTimeout(() => {
-                    btn.classList.remove("copied");
-                    spanText.textContent = "نسخ الرمز";
-                    icon.style.display = "block";
-                }, 2000);
-            });
-        }
-        
-        setInterval(checkOtp, 2000);
-        checkOtp();
-    </script>
 </body>
 </html>
