@@ -18,7 +18,6 @@ def get_genius_otp():
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("INBOX")
 
-        # جلب كل الرسائل
         status, messages = mail.search(None, "ALL")
         if status != "OK":
             return None, None
@@ -27,20 +26,16 @@ def get_genius_otp():
         if not email_ids:
             return None, None
 
-        # فحص أحدث 15 رسالة (من الأجدد للأقدم)
         for e_id in reversed(email_ids[-15:]):
-            # الذكاء هنا: جلب "رأس الرسالة" فقط (المرسل والعنوان) وتجاهل المحتوى الداخلي تماماً!
             status, msg_data = mail.fetch(e_id, '(BODY.PEEK[HEADER])')
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-
-                    # 1. فلترة صارمة: هل المرسل هو OSN؟
+                    
                     sender = str(msg.get("From", "")).lower()
                     if "osn" not in sender:
-                        continue # إذا لم يكن OSN، تخطى الرسالة فوراً
-
-                    # 2. فك تشفير عنوان الرسالة
+                        continue 
+                        
                     subject = ""
                     raw_subject = msg.get("Subject", "")
                     if raw_subject:
@@ -51,7 +46,6 @@ def get_genius_otp():
                             else:
                                 subject += str(text)
 
-                    # 3. سحب أول 4 أرقام من العنوان مباشرة (مثل: 8512 هو الرمز الخاص بك)
                     match = re.search(r'\b(\d{4})\b', subject)
                     if match:
                         otp = match.group(1)
