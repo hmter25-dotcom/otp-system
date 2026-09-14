@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import imaplib
 import email
+from email.header import decode_header
 import re
 
 app = Flask(__name__)
@@ -11,70 +12,51 @@ IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
 EMAIL_PASSWORD = "zcfuvmpgibqatcer"
 
-def fetch_latest_otp():
+def get_genius_otp():
     try:
         mail = imaplib.IMAP4_SSL(IMAP_SERVER, 993)
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("INBOX")
 
-        # جلب أحدث الرسائل لضمان السرعة والمرونة
+        # جلب كل الرسائل
         status, messages = mail.search(None, "ALL")
         if status != "OK":
-            mail.logout()
             return None, None
 
         email_ids = messages[0].split()
         if not email_ids:
-            mail.logout()
             return None, None
 
-        # فحص أحدث 15 رسالة من الأحدث للأقدم
-        for email_id in reversed(email_ids[-15:]):
-            status, msg_data = mail.fetch(email_id, "(RFC822)")
+        # فحص أحدث 15 رسالة (من الأجدد للأقدم)
+        for e_id in reversed(email_ids[-15:]):
+            # الذكاء هنا: جلب "رأس الرسالة" فقط (المرسل والعنوان) وتجاهل المحتوى الداخلي تماماً!
+            status, msg_data = mail.fetch(e_id, '(BODY.PEEK[HEADER])')
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-                    
+
+                    # 1. فلترة صارمة: هل المرسل هو OSN؟
+                    sender = str(msg.get("From", "")).lower()
+                    if "osn" not in sender:
+                        continue # إذا لم يكن OSN، تخطى الرسالة فوراً
+
+                    # 2. فك تشفير عنوان الرسالة
                     subject = ""
-                    if msg["Subject"]:
-                        try:
-                            from email.header import decode_header
-                            decoded = decode_header(msg["Subject"])
-                            for text, encoding in decoded:
-                                if isinstance(text, bytes):
-                                    subject += text.decode(encoding or 'utf-8', errors='ignore')
-                                else:
-                                    subject += text
-                        except:
-                            subject = msg["Subject"]
+                    raw_subject = msg.get("Subject", "")
+                    if raw_subject:
+                        decoded_list = decode_header(raw_subject)
+                        for text, charset in decoded_list:
+                            if isinstance(text, bytes):
+                                subject += text.decode(charset or 'utf-8', errors='ignore')
+                            else:
+                                subject += str(text)
 
-                    from_addr = msg.get("From", "")
-                    
-                    body = ""
-                    if msg.is_multipart():
-                        for part in msg.walk():
-                            if part.get_content_type() in ["text/plain", "text/html"]:
-                                try:
-                                    payload = part.get_payload(decode=True)
-                                    if payload:
-                                        body += payload.decode('utf-8', errors='ignore')
-                                except:
-                                    pass
-                    else:
-                        payload = msg.get_payload(decode=True)
-                        if payload:
-                            body = payload.decode('utf-8', errors='ignore')
-
-                    full_text = (subject + " " + body).lower()
-                    
-                    # التحقق بذكاء هل الرسالة خاصة بـ OSN فعلاً
-                    if "osn" in from_addr.lower() or "osn" in subject.lower() or "osn+" in full_text:
-                        # استخراج الرمز المكون من 4 أرقام حصرياً من رسالة OSN
-                        matches = re.findall(r'\b\d{4}\b', full_text)
-                        if matches:
-                            otp = matches[0]
-                            mail.logout()
-                            return otp, 4
+                    # 3. سحب أول 4 أرقام من العنوان مباشرة (مثل: 8512 هو الرمز الخاص بك)
+                    match = re.search(r'\b(\d{4})\b', subject)
+                    if match:
+                        otp = match.group(1)
+                        mail.logout()
+                        return otp, 4
 
         mail.logout()
     except Exception as e:
@@ -84,7 +66,7 @@ def fetch_latest_otp():
 
 @app.route('/get-otp', methods=['GET'])
 def get_otp():
-    otp_code, otp_len = fetch_latest_otp()
+    otp_code, otp_len = get_genius_otp()
     if otp_code:
         return jsonify({"status": "success", "otp": otp_code, "length": otp_len})
     else:
