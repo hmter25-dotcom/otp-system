@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة استلام رمز OSN+</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
         * {
             box-sizing: border-box;
@@ -15,7 +15,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            background: #090d16;
             color: #f8fafc;
             display: flex;
             justify-content: center;
@@ -25,50 +25,45 @@
         }
 
         .premium-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #111726;
+            border: 1px solid #1e293b;
             border-radius: 24px;
-            padding: 40px 30px;
+            padding: 35px 25px;
             width: 100%;
-            max-width: 450px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 440px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
 
         .header-section {
             text-align: center;
-            margin-bottom: 35px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .header-section h1 {
             font-size: 26px;
-            font-weight: 700;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 6px;
         }
 
         .header-section p {
             color: #94a3b8;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .steps-container {
             background: rgba(15, 23, 42, 0.6);
             border-radius: 16px;
             padding: 20px;
-            margin-bottom: 35px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .steps-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #e2e8f0;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -77,11 +72,11 @@
         .step-item {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 10px;
             color: #cbd5e1;
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 13.5px;
+            line-height: 1.5;
         }
 
         .step-item:last-child {
@@ -89,87 +84,79 @@
         }
 
         .step-number {
-            background: #38bdf8;
-            color: #020617;
-            width: 24px;
-            height: 24px;
+            background: #2563eb;
+            color: #fff;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             flex-shrink: 0;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .otp-wrapper {
             text-align: center;
+            margin-bottom: 25px;
         }
 
         .otp-title {
-            font-size: 16px;
-            color: #e2e8f0;
+            font-size: 15px;
+            color: #cbd5e1;
             margin-bottom: 15px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .otp-container {
             display: flex;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .otp-input {
-            width: 60px;
-            height: 70px;
-            font-size: 32px;
-            font-weight: 700;
+            width: 58px;
+            height: 68px;
+            font-size: 30px;
+            font-weight: 800;
             text-align: center;
-            background: #0f172a;
-            border: 2px solid #334155;
-            border-radius: 16px;
+            background: #0a0f1d;
+            border: 2px solid #27354a;
+            border-radius: 14px;
             color: #ffffff;
             outline: none;
             transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .otp-input.active {
             border-color: #10b981;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
             color: #10b981;
         }
 
-        /* تنسيق زر النسخ الفخم */
         .copy-btn {
-            display: none; /* مخفي في البداية */
+            display: none; 
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+            gap: 8px;
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
             color: #fff;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             padding: 14px 20px;
             font-size: 16px;
             font-weight: 700;
             width: 100%;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-        }
-
-        .copy-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
         }
 
         .copy-btn.copied {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            background: #10b981;
         }
 
         .status-badge {
@@ -177,20 +164,69 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: rgba(51, 65, 85, 0.5);
-            padding: 12px 24px;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 12px 20px;
             border-radius: 50px;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13.5px;
+            font-weight: 600;
             color: #94a3b8;
-            transition: all 0.4s ease;
             width: 100%;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .status-badge.success {
             background: rgba(16, 185, 129, 0.1);
             color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- قسم الدعم الفني المطابق للصورة تماماً --- */
+        .support-section {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            margin-top: 15px;
+        }
+
+        .support-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .support-subtitle {
+            font-size: 14.5px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .telegram-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #229ED9;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 36px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(34, 158, 217, 0.4);
+            transition: all 0.3s ease;
+            direction: ltr; /* لضبط الترتيب: اليوزر ثم الطيارة */
+        }
+
+        .telegram-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(34, 158, 217, 0.6);
+            background: #2bb3f3;
+        }
+
+        .telegram-btn svg {
+            width: 22px;
+            height: 22px;
         }
 
         .loader {
@@ -203,43 +239,37 @@
             animation: rotation 1s linear infinite;
         }
 
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="premium-card">
         
-        <!-- الترويسة -->
         <div class="header-section">
-            <h1>بوابة الدخول | OSN+</h1>
-            <p>نظام آلي لاستلام رموز التحقق فورياً</p>
+            <h1>بوابة استلام الرمز | OSN+</h1>
+            <p>نظام ذكي وآمن لسحب الرمز تلقائياً</p>
         </div>
 
-        <!-- خطوات الاستخدام للعميل -->
         <div class="steps-container">
             <div class="steps-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                 طريقة تسجيل الدخول:
             </div>
             <div class="step-item">
                 <div class="step-number">1</div>
-                <div>انسخ البريد الإلكتروني الذي استلمته في تفاصيل طلبك من المتجر.</div>
+                <div>انسخ البريد الإلكتروني المستلم من المتجر في تفاصيل طلبك.</div>
             </div>
             <div class="step-item">
                 <div class="step-number">2</div>
-                <div>افتح تطبيق OSN+ وأدخل البريد لطلب رمز الدخول (OTP).</div>
+                <div>افتح تطبيق OSN+ واطلب رمز الدخول (OTP).</div>
             </div>
             <div class="step-item">
                 <div class="step-number">3</div>
-                <div>انتظر لحظات، وسيظهر الرمز أمامك بالأسفل بشكل تلقائي.</div>
+                <div>انتظر ثواني وسيظهر الرمز أمامك بالأسفل مباشرة.</div>
             </div>
         </div>
 
-        <!-- خانات الكود -->
         <div class="otp-wrapper">
             <div class="otp-title">رمز التحقق الخاص بك:</div>
             
@@ -250,27 +280,32 @@
                 <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
             </div>
 
-            <!-- زر النسخ السحري -->
             <button class="copy-btn" id="copy-btn" onclick="copyCode()">
-                <svg id="copy-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
+                <svg id="copy-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <span id="copy-text">نسخ الرمز</span>
             </button>
 
-            <!-- حالة السحب -->
             <div class="status-badge" id="status-badge">
                 <span class="loader" id="loader-icon"></span>
-                <span id="status-text">النظام بانتظار وصول الرمز...</span>
+                <span id="status-text">بانتظار طلب الرمز من التطبيق...</span>
             </div>
+        </div>
+
+        <!-- نفس الجزء اللي في صورتك بالضبط -->
+        <div class="support-section">
+            <div class="support-title">لو احتجت لأي مساعدة؟</div>
+            <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
+            <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn">
+                <span>@elevaraa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </a>
         </div>
 
     </div>
 
     <script>
         const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
-        let currentFetchedCode = ""; // لتخزين الكود عشان ننسخه
+        let currentFetchedCode = ""; 
         
         function checkOtp() {
             fetch(RENDER_API)
@@ -283,58 +318,45 @@
 
                     if (data.status === "success" && data.otp) {
                         const code = data.otp.toString();
-                        currentFetchedCode = code; // حفظ الكود
+                        currentFetchedCode = code; 
                         
-                        // تعبئة الخانات وإضافة تأثير الإضاءة الخضراء
                         for (let i = 0; i < 4; i++) { 
                             let input = document.getElementById(`digit-${i}`);
                             input.value = code[i] || ""; 
                             input.classList.add("active");
                         }
                         
-                        // إظهار زر النسخ
                         copyBtn.style.display = "flex";
-                        
-                        // تغيير حالة الزر للنجاح
                         badge.classList.add("success");
-                        statusText.textContent = "تم استلام الرمز بنجاح!";
+                        statusText.textContent = "تم سحب الرمز بنجاح! ✓";
                         loader.style.display = "none";
                     } else {
                         currentFetchedCode = "";
-                        
-                        // إعادة الخانات لوضع الانتظار
                         for (let i = 0; i < 4; i++) { 
                             let input = document.getElementById(`digit-${i}`);
                             input.value = "-"; 
                             input.classList.remove("active");
                         }
                         
-                        // إخفاء زر النسخ
                         copyBtn.style.display = "none";
-                        
-                        // إعادة حالة الزر للانتظار
                         badge.classList.remove("success");
-                        statusText.textContent = "النظام بانتظار وصول الرمز...";
+                        statusText.textContent = "بانتظار طلب الرمز من التطبيق...";
                         loader.style.display = "inline-block";
                     }
                 }).catch(err => console.error("Error fetching OTP:", err));
         }
 
-        // دالة نسخ الكود بضغطة زر
         function copyCode() {
             if (!currentFetchedCode) return;
-            
             navigator.clipboard.writeText(currentFetchedCode).then(() => {
                 const btn = document.getElementById("copy-btn");
                 const spanText = document.getElementById("copy-text");
                 const icon = document.getElementById("copy-icon");
 
-                // تغيير شكل الزر للأخضر
                 btn.classList.add("copied");
                 spanText.textContent = "تم النسخ بنجاح! ✓";
-                icon.style.display = "none"; // إخفاء أيقونة النسخ
+                icon.style.display = "none"; 
 
-                // يرجع لشكله الطبيعي بعد ثانيتين
                 setTimeout(() => {
                     btn.classList.remove("copied");
                     spanText.textContent = "نسخ الرمز";
@@ -343,7 +365,6 @@
             });
         }
         
-        // فحص الرمز كل ثانيتين
         setInterval(checkOtp, 2000);
         checkOtp();
     </script>
