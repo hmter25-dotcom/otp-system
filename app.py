@@ -7,10 +7,9 @@ import re
 app = Flask(__name__)
 CORS(app)
 
-# إعدادات جيميل الرسمية
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
-EMAIL_PASSWORD = "zcfuvmpgibqatcer"  # كلمة مرور التطبيق بدون مسافات
+EMAIL_PASSWORD = "zcfuvmpgibqatcer"
 
 def fetch_latest_otp():
     try:
@@ -18,7 +17,6 @@ def fetch_latest_otp():
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("inbox")
 
-        # البحث عن آخر الرسائل
         status, messages = mail.search(None, "ALL")
         if status != "OK":
             return None, None
@@ -27,13 +25,27 @@ def fetch_latest_otp():
         if not email_ids:
             return None, None
 
-        # فحص أحدث 3 رسائل للبحث عن الرمز
+        # فحص أحدث 3 رسائل
         for email_id in reversed(email_ids[-3:]):
             status, msg_data = mail.fetch(email_id, "(RFC822)")
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
                     
+                    subject = ""
+                    if msg["Subject"]:
+                        try:
+                            # فك تشفير عنوان الرسالة إن وجد
+                            from email.header import decode_header
+                            decoded_headers = decode_header(msg["Subject"])
+                            for text, encoding in decoded_headers:
+                                if isinstance(text, bytes):
+                                    subject += text.decode(encoding or 'utf-8', errors='ignore')
+                                else:
+                                    subject += text
+                        except:
+                            subject = msg["Subject"]
+
                     body = ""
                     if msg.is_multipart():
                         for part in msg.walk():
@@ -50,11 +62,17 @@ def fetch_latest_otp():
                         if payload:
                             body = payload.decode('utf-8', errors='ignore')
 
-                    # البحث عن أول 4 أرقام متتالية في الرسالة (رمز التحقق)
-                    match_4 = re.search(r'\b\d{4}\b', body)
-                    if match_4:
+                    # 1. البحث أولاً في عنوان الرسالة (لأن OSN تحط الرمز في العنوان مثل: "5049 هو الرمز الخاص بك")
+                    match_sub = re.search(r'\b(\d{4})\b', subject)
+                    if match_sub:
                         mail.logout()
-                        return match_4.group(0), 4
+                        return match_sub.group(1), 4
+
+                    # 2. البحث بجانب كلمات دالة في نص الرسالة مثل OTP أو رمز
+                    match_body = re.search(r'(?:OTP|رمز|verification|code)[:\s]*(\d{4})', body, re.IGNORECASE)
+                    if match_body:
+                        mail.logout()
+                        return match_body.group(1), 4
 
         mail.logout()
     except Exception as e:
