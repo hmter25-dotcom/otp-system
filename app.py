@@ -17,6 +17,7 @@ def fetch_latest_otp():
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("inbox")
 
+        # البحث عن كل الرسائل بدون استثناء
         status, messages = mail.search(None, "ALL")
         if status != "OK":
             return None, None
@@ -25,8 +26,8 @@ def fetch_latest_otp():
         if not email_ids:
             return None, None
 
-        # فحص آخر 3 رسائل للتأكد من التقاط الكود بدقة
-        for email_id in reversed(email_ids[-3:]):
+        # فحص آخر 5 رسائل للتأكد من التقاط الرمز فوراً
+        for email_id in reversed(email_ids[-5:]):
             status, msg_data = mail.fetch(email_id, "(RFC822)")
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
@@ -48,7 +49,7 @@ def fetch_latest_otp():
                         if payload:
                             body = payload.decode('utf-8', errors='ignore')
 
-                    # البحث عن أي 4 أرقام متتالية في الرسالة
+                    # البحث عن أول 4 أرقام متتالية في نص الرسالة
                     match_4 = re.search(r'\b\d{4}\b', body)
                     if match_4:
                         mail.logout()
