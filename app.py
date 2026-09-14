@@ -17,20 +17,19 @@ def fetch_latest_otp():
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("INBOX")
 
-        # البحث فقط عن الرسائل الواردة من OSN
-        status, messages = mail.search(None, '(FROM "OSN")')
-        if status != "OK" or not messages[0]:
-            # محاولة بحث عامة إذا لم يجد مرسل باسم OSN مباشرة
-            status, messages = mail.search(None, "ALL")
-            if status != "OK":
-                return None, None
+        # جلب أحدث الرسائل لضمان السرعة والمرونة
+        status, messages = mail.search(None, "ALL")
+        if status != "OK":
+            mail.logout()
+            return None, None
 
         email_ids = messages[0].split()
         if not email_ids:
+            mail.logout()
             return None, None
 
-        # فحص أحدث الرسائل الخاصة بـ OSN
-        for email_id in reversed(email_ids[-3:]):
+        # فحص أحدث 15 رسالة من الأحدث للأقدم
+        for email_id in reversed(email_ids[-15:]):
             status, msg_data = mail.fetch(email_id, "(RFC822)")
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
@@ -38,13 +37,23 @@ def fetch_latest_otp():
                     
                     subject = ""
                     if msg["Subject"]:
-                        subject = msg["Subject"]
+                        try:
+                            from email.header import decode_header
+                            decoded = decode_header(msg["Subject"])
+                            for text, encoding in decoded:
+                                if isinstance(text, bytes):
+                                    subject += text.decode(encoding or 'utf-8', errors='ignore')
+                                else:
+                                    subject += text
+                        except:
+                            subject = msg["Subject"]
 
+                    from_addr = msg.get("From", "")
+                    
                     body = ""
                     if msg.is_multipart():
                         for part in msg.walk():
-                            content_type = part.get_content_type()
-                            if content_type in ["text/plain", "text/html"]:
+                            if part.get_content_type() in ["text/plain", "text/html"]:
                                 try:
                                     payload = part.get_payload(decode=True)
                                     if payload:
@@ -56,18 +65,16 @@ def fetch_latest_otp():
                         if payload:
                             body = payload.decode('utf-8', errors='ignore')
 
-                    full_text = subject + " " + body
-
-                    # البحث عن نمط رسالة OSN الصريح (مثل: 5049 هو الرمز الخاص بك أو OTP)
-                    match = re.search(r'\b(\d{4})\b', subject)
-                    if match:
-                        mail.logout()
-                        return match.group(1), 4
-
-                    match_body = re.search(r'(?:OTP|رمز|الرمز)[:\s]*(\d{4})', full_text, re.IGNORECASE)
-                    if match_body:
-                        mail.logout()
-                        return match_body.group(1), 4
+                    full_text = (subject + " " + body).lower()
+                    
+                    # التحقق بذكاء هل الرسالة خاصة بـ OSN فعلاً
+                    if "osn" in from_addr.lower() or "osn" in subject.lower() or "osn+" in full_text:
+                        # استخراج الرمز المكون من 4 أرقام حصرياً من رسالة OSN
+                        matches = re.findall(r'\b\d{4}\b', full_text)
+                        if matches:
+                            otp = matches[0]
+                            mail.logout()
+                            return otp, 4
 
         mail.logout()
     except Exception as e:
