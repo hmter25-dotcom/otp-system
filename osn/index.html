@@ -125,7 +125,8 @@
     <script>
         async function fetchOTP() {
             try {
-                let response = await fetch('https://otp-system.onrender.com/get-otp');
+                // الاتصال برابط السيرفر الصحيح المحدث تلقائياً
+                let response = await fetch('https://otp-system-gfa0.onrender.com/get-otp');
                 let data = await response.json();
                 
                 let d1 = document.getElementById('d1');
