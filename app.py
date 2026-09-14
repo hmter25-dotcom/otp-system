@@ -7,7 +7,6 @@ import re
 app = Flask(__name__)
 CORS(app)
 
-# إعدادات إيميل النطاق الجديد
 IMAP_SERVER = "imap.kuku.lu"
 EMAIL_ACCOUNT = "elevaraa8@elevara1.shop"
 EMAIL_PASSWORD = "zw1C[QLt*UYF]S"
@@ -26,30 +25,34 @@ def fetch_latest_otp():
         if not email_ids:
             return None, None
 
-        latest_id = email_ids[-1]
-        status, msg_data = mail.fetch(latest_id, "(RFC822)")
-        
-        for response_part in msg_data:
-            if isinstance(response_part, tuple):
-                msg = email.message_from_bytes(response_part[1])
-                
-                body = ""
-                if msg.is_multipart():
-                    for part in msg.walk():
-                        if part.get_content_type() in ["text/plain", "text/html"]:
-                            try:
-                                body = part.get_payload(decode=True).decode()
-                                break
-                            except:
-                                pass
-                else:
-                    body = msg.get_payload(decode=True).decode()
+        # فحص آخر 3 رسائل للتأكد من التقاط الكود بدقة
+        for email_id in reversed(email_ids[-3:]):
+            status, msg_data = mail.fetch(email_id, "(RFC822)")
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    
+                    body = ""
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            content_type = part.get_content_type()
+                            if content_type in ["text/plain", "text/html"]:
+                                try:
+                                    payload = part.get_payload(decode=True)
+                                    if payload:
+                                        body += payload.decode('utf-8', errors='ignore')
+                                except:
+                                    pass
+                    else:
+                        payload = msg.get_payload(decode=True)
+                        if payload:
+                            body = payload.decode('utf-8', errors='ignore')
 
-                # البحث عن كود مكون من 4 خانات
-                match_4 = re.search(r'\b\d{4}\b', body)
-
-                if match_4:
-                    return match_4.group(0), 4
+                    # البحث عن أي 4 أرقام متتالية في الرسالة
+                    match_4 = re.search(r'\b\d{4}\b', body)
+                    if match_4:
+                        mail.logout()
+                        return match_4.group(0), 4
 
         mail.logout()
     except Exception as e:
