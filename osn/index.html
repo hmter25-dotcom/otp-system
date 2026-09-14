@@ -3,158 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة التحقق الرسمية - OSN+</title>
+    <title>OSN+ Verification - التحقق من الحساب</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            font-family: Tahoma, sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: #fff;
+            background-color: #0b0e14;
+            color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             padding: 20px;
         }
         .container {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 40px 30px;
+            background: #151a23;
+            border: 1px solid #222b38;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 30px 20px;
             width: 100%;
             max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        h2 {
+        h1 {
             font-size: 24px;
-            margin-bottom: 10px;
-            color: #f8fafc;
-            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
         .subtitle {
             font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 25px;
+            color: #9ba1a6;
+            margin-bottom: 20px;
         }
         .email-box {
-            font-size: 13px;
-            color: #38bdf8;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px dashed rgba(56, 189, 248, 0.3);
-            padding: 10px;
-            border-radius: 8px;
+            background: #1c2430;
+            border: 1px solid #2f3b4c;
+            border-radius: 10px;
+            padding: 12px;
             margin-bottom: 25px;
-            direction: ltr;
+            word-break: break-all;
+        }
+        .email-label {
+            font-size: 12px;
+            color: #8c9bae;
+            margin-bottom: 4px;
+        }
+        .email-value {
+            font-size: 15px;
+            color: #00d2ff;
+            font-weight: 600;
         }
         .otp-container {
             display: flex;
             justify-content: center;
             gap: 12px;
             margin-bottom: 25px;
-            direction: ltr;
         }
-        .otp-digit {
+        .otp-input {
             width: 55px;
-            height: 65px;
-            font-size: 28px;
+            height: 60px;
+            font-size: 26px;
             font-weight: bold;
             text-align: center;
-            background: #0f172a;
-            border: 2px solid #334155;
-            color: #38bdf8;
-            border-radius: 10px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            background: #1c2430;
+            border: 2px solid #2f3b4c;
+            border-radius: 12px;
+            color: #ffffff;
             outline: none;
             transition: all 0.3s ease;
         }
-        .otp-digit:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        .otp-input:focus {
+            border-color: #00d2ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
         }
-        .status {
+        .status-btn {
+            background: #1c2430;
+            border: 1px solid #2f3b4c;
+            color: #9ba1a6;
+            padding: 12px;
+            border-radius: 10px;
             font-size: 14px;
-            color: #cbd5e1;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 8px;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        .spinner {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #94a3b8;
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 8px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .status-btn.success {
+            background: rgba(0, 255, 128, 0.1);
+            border-color: rgba(0, 255, 128, 0.3);
+            color: #00ff80;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>OSN+ Verification</h2>
+        <h1>OSN+ Verification</h1>
         <p class="subtitle">رمز التحقق الخاص بحسابك</p>
-        
+
+        <!-- صندوق الإيميل الواضح والمرتب -->
         <div class="email-box">
-            elevaraa8@elevara1.shop
+            <div class="email-label">البريد الإلكتروني للحساب:</div>
+            <div class="email-value" id="account-email">elevaraa8@gmail.com</div>
         </div>
 
-        <!-- 4 خانات احترافية لعرض الكود -->
+        <!-- خانات رمز التحقق -->
         <div class="otp-container">
-            <input type="text" class="otp-digit" id="d1" maxlength="1" readonly>
-            <input type="text" class="otp-digit" id="d2" maxlength="1" readonly>
-            <input type="text" class="otp-digit" id="d3" maxlength="1" readonly>
-            <input type="text" class="otp-digit" id="d4" maxlength="1" readonly>
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
         </div>
-        
-        <div class="status" id="status-text">
-            <span>جاري البحث عن الكود</span><span class="spinner"></span>
-        </div>
+
+        <!-- حالة الجلب -->
+        <button class="status-btn" id="status-btn">جاري انتظار الرمز تلقائياً...</button>
     </div>
 
     <script>
-        async function fetchOTP() {
-            try {
-                // الاتصال برابط السيرفر الصحيح المحدث تلقائياً
-                let response = await fetch('https://otp-system-gfa0.onrender.com/get-otp');
-                let data = await response.json();
-                
-                let d1 = document.getElementById('d1');
-                let d2 = document.getElementById('d2');
-                let d3 = document.getElementById('d3');
-                let d4 = document.getElementById('d4');
-                let statusText = document.getElementById('status-text');
+        const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
 
-                if (data.status === 'success' && data.otp && data.otp.length === 4) {
-                    d1.value = data.otp[0] || '';
-                    d2.value = data.otp[1] || '';
-                    d3.value = data.otp[2] || '';
-                    d4.value = data.otp[3] || '';
-                    
-                    statusText.innerHTML = "تم سحب الرمز بنجاح ✔";
-                    statusText.style.color = "#4ade80";
-                } else {
-                    statusText.innerHTML = 'في انتظار وصول الرمز الجديد<span class="spinner"></span>';
-                    statusText.style.color = "#cbd5e1";
-                }
-            } catch (error) {
-                console.error('Error fetching OTP:', error);
-            }
+        function checkOtp() {
+            fetch(RENDER_API)
+                .then(response => response.json())
+                .then(data => {
+                    const btn = document.getElementById("status-btn");
+                    if (data.status === "success" && data.otp) {
+                        const code = data.otp.toString();
+                        for (let i = 0; i < 4; i++) {
+                            document.getElementById(`digit-${i}`).value = code[i] || "";
+                        }
+                        btn.textContent = "✓ تم سحب الرمز بنجاح";
+                        btn.classList.add("success");
+                    } else {
+                        for (let i = 0; i < 4; i++) {
+                            document.getElementById(`digit-${i}`).value = "";
+                        }
+                        btn.textContent = "جاري انتظار الرمز تلقائياً...";
+                        btn.classList.remove("success");
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching OTP:", err);
+                });
         }
 
-        // تحديث تلقائي كل 3 ثواني
-        setInterval(fetchOTP, 3000);
-        fetchOTP();
+        // فحص الرمز كل ثانيتين تلقائياً
+        setInterval(checkOtp, 2000);
+        checkOtp();
     </script>
+
 </body>
 </html>
