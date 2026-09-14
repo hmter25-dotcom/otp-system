@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجموعة متاجرنا | عالمك الرقمي المتكامل</title>
+    <title>متاجر إليفارا وبوكس أب | عالمك الرقمي المتكامل</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 
@@ -32,7 +32,6 @@
                 radial-gradient(circle at 85% 30%, rgba(129, 140, 248, 0.08), transparent 25%);
         }
 
-        /* تأثير الخلفية الشبكية */
         .grid-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -42,30 +41,68 @@
             z-index: -1;
         }
 
-        /* الهيدر والشعارات */
+        /* تنسيق الهيدر وأسماء المتاجر مع الدومين */
         header {
-            padding: 30px 5%;
+            padding: 40px 5% 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 40px;
+            gap: 60px;
             animation: fadeInDown 1s ease;
         }
 
+        .brand-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
         .brand-logo {
-            height: 90px;
+            height: 85px;
             object-fit: contain;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
             transition: transform 0.4s ease;
+            border-radius: 12px;
         }
 
-        .brand-logo:hover {
+        .brand-item:hover .brand-logo {
             transform: translateY(-5px) scale(1.05);
+        }
+
+        .brand-text-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        /* تنسيق الدومين الفخم */
+        .brand-domain {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #818cf8;
+            letter-spacing: 1.5px;
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            direction: ltr;
         }
 
         /* القسم الرئيسي (Hero) */
         .hero {
-            min-height: 70vh;
+            min-height: 55vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -88,14 +125,14 @@
         .hero p {
             font-size: clamp(16px, 2vw, 20px);
             color: var(--text-muted);
-            max-width: 700px;
+            max-width: 750px;
             line-height: 1.8;
             margin-bottom: 40px;
         }
 
         /* قسم المميزات */
         .features {
-            padding: 80px 5%;
+            padding: 60px 5%;
             max-width: 1200px;
             margin: 0 auto;
         }
@@ -241,10 +278,11 @@
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes rotateBg { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* الشاشات الصغيرة */
         @media (max-width: 768px) {
-            .brand-logo { height: 70px; }
-            header { gap: 20px; }
+            header { gap: 30px; flex-direction: row; flex-wrap: wrap; }
+            .brand-logo { height: 65px; }
+            .brand-name { font-size: 20px; }
+            .brand-domain { font-size: 11px; padding: 3px 10px; }
         }
     </style>
 </head>
@@ -253,14 +291,28 @@
     <div class="grid-bg"></div>
 
     <header>
-        <!-- تأكد من وجود الصورتين في القائمة الرئيسية لجيت هاب بنفس هذه الأسماء -->
-        <img src="image_22.png" alt="Elevaraa" class="brand-logo">
-        <img src="image_21.png" alt="BoxUp" class="brand-logo">
+        <!-- متجر إليفارا -->
+        <div class="brand-item">
+            <img src="9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
+            <div class="brand-text-group">
+                <span class="brand-name">إليفارا</span>
+                <span class="brand-domain">elevaraa1.shop</span>
+            </div>
+        </div>
+        
+        <!-- متجر بوكس أب -->
+        <div class="brand-item">
+            <img src="e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" onerror="this.style.display='none'">
+            <div class="brand-text-group">
+                <span class="brand-name">بوكس أب</span>
+                <span class="brand-domain">boxupp.shop</span>
+            </div>
+        </div>
     </header>
 
     <section class="hero">
         <h1>نبتكر عالمك الرقمي<br>بأسعار لا تُنافس</h1>
-        <p>نحن نقدم لك أفضل الاشتراكات الرقمية وخدمات الترفيه بأسعار تنافسية جداً. نجمع بين الجودة العالية، التسليم الفوري، والموثوقية التامة لنمنحك تجربة لا تُنسى.</p>
+        <p>مرحباً بك في الوجهة الأولى للاشتراكات الرقمية. تجمع متاجر "إليفارا" و "بوكس أب" بين الجودة العالية، التسليم الفوري، والموثوقية التامة لنمنحك تجربة ترفيهية لا تُنسى.</p>
     </section>
 
     <section class="features">
@@ -306,7 +358,7 @@
     </section>
 
     <footer>
-        <p>جميع الحقوق محفوظة © 2024 | مجموعة متاجرنا للخدمات الرقمية</p>
+        <p>جميع الحقوق محفوظة © 2026 | متاجر إليفارا وبوكس أب للخدمات الرقمية</p>
     </footer>
 
 </body>
