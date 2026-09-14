@@ -1,76 +1,62 @@
-from flask import Flask, jsonify
-from flask_cors import CORS
-import imaplib
-import email
-from email.header import decode_header
-import re
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSN+ Verification - التحقق من الحساب</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #0b0e14; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: #151a23; border: 1px solid #222b38; border-radius: 16px; padding: 30px 20px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        h1 { font-size: 24px; color: #ffffff; margin-bottom: 8px; font-weight: 700; }
+        .subtitle { font-size: 14px; color: #9ba1a6; margin-bottom: 20px; }
+        .email-box { background: #1c2430; border: 1px solid #2f3b4c; border-radius: 10px; padding: 12px; margin-bottom: 25px; }
+        .email-label { font-size: 12px; color: #8c9bae; margin-bottom: 4px; }
+        .email-value { font-size: 15px; color: #00d2ff; font-weight: 600; }
+        .otp-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
+        .otp-input { width: 55px; height: 60px; font-size: 26px; font-weight: bold; text-align: center; background: #1c2430; border: 2px solid #2f3b4c; border-radius: 12px; color: #ffffff; outline: none; }
+        .status-btn { background: #1c2430; border: 1px solid #2f3b4c; color: #9ba1a6; padding: 12px; border-radius: 10px; font-size: 14px; width: 100%; font-weight: 600; }
+        .status-btn.success { background: rgba(0, 255, 128, 0.1); border-color: rgba(0, 255, 128, 0.3); color: #00ff80; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OSN+ Verification</h1>
+        <p class="subtitle">رمز التحقق الخاص بحسابك</p>
+        <div class="email-box">
+            <div class="email-label">البريد الإلكتروني للحساب:</div>
+            <div class="email-value">elevaraa8@gmail.com</div>
+        </div>
+        <div class="otp-container">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
+            <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
+        </div>
+        <button class="status-btn" id="status-btn">جاري انتظار الرمز تلقائياً...</button>
+    </div>
 
-app = Flask(__name__)
-CORS(app)
-
-IMAP_SERVER = "imap.gmail.com"
-EMAIL_ACCOUNT = "elevaraa8@gmail.com"
-EMAIL_PASSWORD = "zcfuvmpgibqatcer"
-
-def get_genius_otp():
-    try:
-        mail = imaplib.IMAP4_SSL(IMAP_SERVER, 993)
-        mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
-        mail.select("INBOX")
-
-        # جلب كل الرسائل
-        status, messages = mail.search(None, "ALL")
-        if status != "OK":
-            return None, None
-
-        email_ids = messages[0].split()
-        if not email_ids:
-            return None, None
-
-        # فحص أحدث 15 رسالة (من الأجدد للأقدم)
-        for e_id in reversed(email_ids[-15:]):
-            # الذكاء هنا: جلب "رأس الرسالة" فقط (المرسل والعنوان) وتجاهل المحتوى الداخلي تماماً!
-            status, msg_data = mail.fetch(e_id, '(BODY.PEEK[HEADER])')
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-
-                    # 1. فلترة صارمة: هل المرسل هو OSN؟
-                    sender = str(msg.get("From", "")).lower()
-                    if "osn" not in sender:
-                        continue # إذا لم يكن OSN، تخطى الرسالة فوراً
-
-                    # 2. فك تشفير عنوان الرسالة
-                    subject = ""
-                    raw_subject = msg.get("Subject", "")
-                    if raw_subject:
-                        decoded_list = decode_header(raw_subject)
-                        for text, charset in decoded_list:
-                            if isinstance(text, bytes):
-                                subject += text.decode(charset or 'utf-8', errors='ignore')
-                            else:
-                                subject += str(text)
-
-                    # 3. سحب أول 4 أرقام من العنوان مباشرة (مثل: 8512 هو الرمز الخاص بك)
-                    match = re.search(r'\b(\d{4})\b', subject)
-                    if match:
-                        otp = match.group(1)
-                        mail.logout()
-                        return otp, 4
-
-        mail.logout()
-    except Exception as e:
-        print("Error:", e)
-    
-    return None, None
-
-@app.route('/get-otp', methods=['GET'])
-def get_otp():
-    otp_code, otp_len = get_genius_otp()
-    if otp_code:
-        return jsonify({"status": "success", "otp": otp_code, "length": otp_len})
-    else:
-        return jsonify({"status": "waiting", "otp": None, "length": 0})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    <script>
+        const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
+        function checkOtp() {
+            fetch(RENDER_API)
+                .then(response => response.json())
+                .then(data => {
+                    const btn = document.getElementById("status-btn");
+                    if (data.status === "success" && data.otp) {
+                        const code = data.otp.toString();
+                        for (let i = 0; i < 4; i++) { document.getElementById(`digit-${i}`).value = code[i] || ""; }
+                        btn.textContent = "✓ تم سحب الرمز بنجاح";
+                        btn.classList.add("success");
+                    } else {
+                        for (let i = 0; i < 4; i++) { document.getElementById(`digit-${i}`).value = ""; }
+                        btn.textContent = "جاري انتظار الرمز تلقائياً...";
+                        btn.classList.remove("success");
+                    }
+                }).catch(err => console.error("Error fetching OTP:", err));
+        }
+        setInterval(checkOtp, 2000);
+        checkOtp();
+    </script>
+</body>
+</html>
