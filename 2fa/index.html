@@ -37,6 +37,41 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
+        /* --- قسم الشعارات الجديد --- */
+        .brands-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+            padding-bottom: 25px;
+        }
+
+        .brand-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-logo {
+            height: 60px;
+            object-fit: contain;
+            border-radius: 12px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+        }
+
+        .brand-name {
+            font-size: 15px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* -------------------------- */
+
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -48,12 +83,12 @@
             background: linear-gradient(to right, #38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .header p {
             color: #94a3b8;
-            font-size: 14px;
+            font-size: 14.5px;
             line-height: 1.6;
         }
 
@@ -250,9 +285,22 @@
 
     <div class="container">
         
+        <!-- قسم الشعارات -->
+        <div class="brands-container">
+            <div class="brand-item">
+                <!-- استخدام ../ لسحب الصورة من الملف الرئيسي -->
+                <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
+                <span class="brand-name">إليفارا</span>
+            </div>
+            <div class="brand-item">
+                <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" onerror="this.style.display='none'">
+                <span class="brand-name">بوكس أب</span>
+            </div>
+        </div>
+
         <div class="header">
-            <h1>أداة المصادقة الثنائية (2FA)</h1>
-            <p>أداة آمنة لاستخراج رموز التحقق مباشرة من متصفحك، كبديل لتطبيق Google Authenticator.</p>
+            <h1>بوابة المصادقة الثنائية (2FA)</h1>
+            <p>بوابة آمنة وموثوقة لاستخراج رموز التحقق الخاصة بحساباتك الرقمية في ثوانٍ معدودة.</p>
         </div>
 
         <div class="input-group">
@@ -297,7 +345,6 @@
         let totpInterval;
         let currentCode = "";
 
-        // دالة تحويل المفتاح (Base32) إلى صيغة قابلة للتشفير
         function base32tohex(base32) {
             const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
             let bits = "";
@@ -317,7 +364,6 @@
             return hex;
         }
 
-        // دالة استخراج رمز الـ 2FA (TOTP Algorithm)
         function getTOTP(secret) {
             try {
                 const keyHex = base32tohex(secret);
@@ -338,7 +384,6 @@
             }
         }
 
-        // الدالة الرئيسية لبدء العرض
         function startTotp() {
             const secret = document.getElementById('secretKey').value;
             const errorMsg = document.getElementById('errorMsg');
@@ -368,7 +413,6 @@
             totpInterval = setInterval(() => updateDisplay(secret), 1000);
         }
 
-        // تحديث العداد والرمز كل ثانية
         function updateDisplay(secret) {
             const code = getTOTP(secret);
             const epoch = Math.round(new Date().getTime() / 1000.0);
@@ -378,7 +422,6 @@
             document.getElementById('totpCode').textContent = code;
             document.getElementById('timeRemaining').textContent = remaining;
             
-            // تحديث شريط التقدم
             const progressFill = document.getElementById('progressFill');
             const percentage = (remaining / 30) * 100;
             progressFill.style.width = percentage + '%';
@@ -392,7 +435,6 @@
             }
         }
 
-        // نسخ الرمز
         function copyCode() {
             if (!currentCode) return;
             navigator.clipboard.writeText(currentCode).then(() => {
