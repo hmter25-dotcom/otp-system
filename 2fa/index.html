@@ -111,7 +111,7 @@
 
         /* منطقة عرض الرمز */
         .result-area {
-            display: none; /* مخفي البداية */
+            display: none; 
             background: rgba(15, 23, 42, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -195,6 +195,55 @@
             margin-top: 10px;
             display: none;
         }
+
+        /* --- قسم الدعم الفني --- */
+        .support-section {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            margin-top: 25px;
+        }
+
+        .support-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .support-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .telegram-btn-support {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #229ED9;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 36px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(34, 158, 217, 0.4);
+            transition: all 0.3s ease;
+            direction: ltr;
+        }
+
+        .telegram-btn-support:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(34, 158, 217, 0.6);
+            background: #2bb3f3;
+        }
+
+        .telegram-btn-support svg {
+            width: 22px;
+            height: 22px;
+        }
     </style>
 </head>
 <body>
@@ -232,6 +281,16 @@
             </button>
         </div>
 
+        <!-- قسم الدعم الفني -->
+        <div class="support-section">
+            <div class="support-title">لو احتجت لأي مساعدة؟</div>
+            <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
+            <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn-support">
+                <span>@elevaraa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </a>
+        </div>
+
     </div>
 
     <script>
@@ -244,7 +303,6 @@
             let bits = "";
             let hex = "";
             
-            // تنظيف المدخل من المسافات وجعله كابيتال
             base32 = base32.replace(/\s+/g, '').toUpperCase();
             
             for (let i = 0; i < base32.length; i++) {
@@ -325,13 +383,12 @@
             const percentage = (remaining / 30) * 100;
             progressFill.style.width = percentage + '%';
             
-            // تغيير لون الشريط إذا قرب يخلص الوقت
             if (remaining <= 5) {
-                progressFill.style.backgroundColor = '#ef4444'; // أحمر
+                progressFill.style.backgroundColor = '#ef4444'; 
             } else if (remaining <= 10) {
-                progressFill.style.backgroundColor = '#f59e0b'; // برتقالي
+                progressFill.style.backgroundColor = '#f59e0b'; 
             } else {
-                progressFill.style.backgroundColor = '#38bdf8'; // أزرق طبيعي
+                progressFill.style.backgroundColor = '#38bdf8'; 
             }
         }
 
@@ -343,7 +400,7 @@
                 const text = document.getElementById('copyText');
                 
                 btn.classList.add('success');
-                text.textContent = 'تم النسخ!';
+                text.textContent = 'تم النسخ بنجاح! ✓';
                 
                 setTimeout(() => {
                     btn.classList.remove('success');
