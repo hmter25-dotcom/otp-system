@@ -142,6 +142,36 @@
             color: #10b981;
         }
 
+        /* تنسيق زر النسخ الفخم */
+        .copy-btn {
+            display: none; /* مخفي في البداية */
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -213,13 +243,21 @@
         <div class="otp-wrapper">
             <div class="otp-title">رمز التحقق الخاص بك:</div>
             
-            <!-- تم الحفاظ على dir="ltr" لتظهر الأرقام مرتبة من اليسار لليمين -->
             <div class="otp-container" dir="ltr">
                 <input type="text" class="otp-input" maxlength="1" readonly id="digit-0">
                 <input type="text" class="otp-input" maxlength="1" readonly id="digit-1">
                 <input type="text" class="otp-input" maxlength="1" readonly id="digit-2">
                 <input type="text" class="otp-input" maxlength="1" readonly id="digit-3">
             </div>
+
+            <!-- زر النسخ السحري -->
+            <button class="copy-btn" id="copy-btn" onclick="copyCode()">
+                <svg id="copy-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copy-text">نسخ الرمز</span>
+            </button>
 
             <!-- حالة السحب -->
             <div class="status-badge" id="status-badge">
@@ -232,6 +270,7 @@
 
     <script>
         const RENDER_API = "https://otp-system-gfa0.onrender.com/get-otp";
+        let currentFetchedCode = ""; // لتخزين الكود عشان ننسخه
         
         function checkOtp() {
             fetch(RENDER_API)
@@ -240,9 +279,11 @@
                     const badge = document.getElementById("status-badge");
                     const statusText = document.getElementById("status-text");
                     const loader = document.getElementById("loader-icon");
+                    const copyBtn = document.getElementById("copy-btn");
 
                     if (data.status === "success" && data.otp) {
                         const code = data.otp.toString();
+                        currentFetchedCode = code; // حفظ الكود
                         
                         // تعبئة الخانات وإضافة تأثير الإضاءة الخضراء
                         for (let i = 0; i < 4; i++) { 
@@ -251,11 +292,16 @@
                             input.classList.add("active");
                         }
                         
+                        // إظهار زر النسخ
+                        copyBtn.style.display = "flex";
+                        
                         // تغيير حالة الزر للنجاح
                         badge.classList.add("success");
                         statusText.textContent = "تم استلام الرمز بنجاح!";
                         loader.style.display = "none";
                     } else {
+                        currentFetchedCode = "";
+                        
                         // إعادة الخانات لوضع الانتظار
                         for (let i = 0; i < 4; i++) { 
                             let input = document.getElementById(`digit-${i}`);
@@ -263,12 +309,38 @@
                             input.classList.remove("active");
                         }
                         
+                        // إخفاء زر النسخ
+                        copyBtn.style.display = "none";
+                        
                         // إعادة حالة الزر للانتظار
                         badge.classList.remove("success");
                         statusText.textContent = "النظام بانتظار وصول الرمز...";
                         loader.style.display = "inline-block";
                     }
                 }).catch(err => console.error("Error fetching OTP:", err));
+        }
+
+        // دالة نسخ الكود بضغطة زر
+        function copyCode() {
+            if (!currentFetchedCode) return;
+            
+            navigator.clipboard.writeText(currentFetchedCode).then(() => {
+                const btn = document.getElementById("copy-btn");
+                const spanText = document.getElementById("copy-text");
+                const icon = document.getElementById("copy-icon");
+
+                // تغيير شكل الزر للأخضر
+                btn.classList.add("copied");
+                spanText.textContent = "تم النسخ بنجاح! ✓";
+                icon.style.display = "none"; // إخفاء أيقونة النسخ
+
+                // يرجع لشكله الطبيعي بعد ثانيتين
+                setTimeout(() => {
+                    btn.classList.remove("copied");
+                    spanText.textContent = "نسخ الرمز";
+                    icon.style.display = "block";
+                }, 2000);
+            });
         }
         
         // فحص الرمز كل ثانيتين
