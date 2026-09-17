@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الإدارية | إدارة الاشتراكات</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background: #090d16; color: #f8fafc; min-height: 100vh; padding: 30px 15px; display: flex; justify-content: center; }
+        .admin-box { width: 100%; max-width: 700px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .header p { color: #94a3b8; font-size: 14px; }
+        
+        .card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 25px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
+        .input-control { width: 100%; padding: 14px 16px; background: #0b0f19; border: 1px solid #334155; border-radius: 12px; color: #fff; font-size: 15px; outline: none; transition: 0.3s; }
+        .input-control:focus { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
+        
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; color: #fff; }
+        .btn-danger { background: #ef4444; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-primary { background: #3b82f6; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }
+        .btn-primary:hover { background: #2563eb; }
+
+        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #f87171; display: flex; justify-content: space-between; align-items: center; }
+        
+        .item-card { background: #0b0f19; border: 1px solid #273548; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .item-info { display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
+        .item-note { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+        .item-id { font-family: monospace; font-size: 12px; color: #60a5fa; word-break: break-all; direction: ltr; text-align: right; }
+        .item-date { font-size: 11px; color: #64748b; }
+        
+        .btn-unblock { background: #10b981; color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-unblock:hover { background: #059669; }
+
+        .alert { padding: 14px; border-radius: 10px; font-size: 14px; margin-bottom: 15px; display: none; text-align: center; font-weight: 700; }
+        .alert-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; }
+        .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
+
+        .stats-badge { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 13px; color: #38bdf8; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="admin-box">
+    <div class="header">
+        <h1>🛡️ لوحة التحكم والإدارة المركزية</h1>
+        <p>التحكم الكامل بتعطيل وإعادة تفعيل روابط العملاء بضغطة زر</p>
+    </div>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div class="card" id="authCard">
+        <div class="input-group">
+            <label>كلمة المرور السرية للمدير:</label>
+            <input type="password" id="adminPass" class="input-control" placeholder="أدخل الرقم السري...">
+        </div>
+        <button class="btn btn-primary" onclick="loginAdmin()">تسجيل الدخول</button>
+        <div id="loginAlert" class="alert alert-error" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- لوحة التحكم الفعلية -->
+    <div id="controlPanel" style="display: none;">
+        
+        <!-- قسم إضافة تعطيل جديد -->
+        <div class="card">
+            <div style="font-size: 18px; font-weight: 800; color: #38bdf8; margin-bottom: 15px;">🚫 تعطيل اشتراك جديد</div>
+            <div id="actionAlert" class="alert"></div>
+            
+            <div class="input-group">
+                <label>رابط العميل الكامل أو معرف الاشتراك (ID):</label>
+                <input type="text" id="subInput" class="input-control" placeholder="مثال: https://... أو f889333b-...">
+            </div>
+
+            <div class="input-group">
+                <label>اسم العميل أو ملاحظة (لتتذكره لاحقاً):</label>
+                <input type="text" id="noteInput" class="input-control" placeholder="مثال: اشتراك محمد (نتفليكس)">
+            </div>
+
+            <button class="btn btn-danger" onclick="blockSubscription()">تعطيل الرابط وحظره فوراً 🚫</button>
+        </div>
+
+        <!-- قائمة الاشتراكات المعطلة -->
+        <div class="card">
+            <div class="section-title">
+                <span>الاشتراكات المعطلة حالياً</span>
+                <span class="stats-badge" id="countBadge">0 معطل</span>
+            </div>
+            
+            <div id="blockedListContainer">
+                <p style="color: #64748b; font-size: 14px; text-align: center; padding: 15px;">جاري تحميل القائمة...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SERVER_URL = "https://otp-system-gfa0.onrender.com";
+    let CURRENT_PASS = "";
+
+    function loginAdmin() {
+        const pass = document.getElementById('adminPass').value.trim();
+        if (!pass) return;
+
+        fetch(`${SERVER_URL}/admin/list-blocked`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: pass})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                CURRENT_PASS = pass;
+                document.getElementById('authCard').style.display = 'none';
+                document.getElementById('controlPanel').style.display = 'block';
+                renderList(data.blocked);
+            } else {
+                showAlert('loginAlert', data.message || 'كلمة المرور غير صحيحة', 'error');
+            }
+        })
+        .catch(err => showAlert('loginAlert', 'تعذر الاتصال بالسيرفر', 'error'));
+    }
+
+    function fetchBlockedList() {
+        fetch(`${SERVER_URL}/admin/list-blocked`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: CURRENT_PASS})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') renderList(data.blocked);
+        });
+    }
+
+    function blockSubscription() {
+        const subVal = document.getElementById('subInput').value.trim();
+        const noteVal = document.getElementById('noteInput').value.trim();
+        if (!subVal) {
+            showAlert('actionAlert', 'يرجى إدخال الرابط أو المعرف أولاً', 'error');
+            return;
+        }
+
+        fetch(`${SERVER_URL}/admin/block`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: CURRENT_PASS, sub_id: subVal, note: noteVal})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('actionAlert', 'تم تعطيل الرابط بنجاح وأصبح العميل محظوراً!', 'success');
+                document.getElementById('subInput').value = '';
+                document.getElementById('noteInput').value = '';
+                renderList(data.blocked);
+            } else {
+                showAlert('actionAlert', data.message, 'error');
+            }
+        });
+    }
+
+    function unblockSubscription(id) {
+        fetch(`${SERVER_URL}/admin/unblock`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: CURRENT_PASS, sub_id: id})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('actionAlert', 'تمت إعادة تفعيل وتشغيل الرابط بنجاح للعميل!', 'success');
+                renderList(data.blocked);
+            }
+        });
+    }
+
+    function renderList(list) {
+        const container = document.getElementById('blockedListContainer');
+        const badge = document.getElementById('countBadge');
+        badge.innerText = `${list.length} معطل`;
+
+        if (!list || list.length === 0) {
+            container.innerHTML = '<p style="color: #64748b; font-size: 14px; text-align: center; padding: 20px;">لا يوجد أي روابط معطلة حالياً، جميع الاشتراكات تعمل بكفاءة.</p>';
+            return;
+        }
+
+        let html = '';
+        list.forEach(item => {
+            html += `
+                <div class="item-card">
+                    <div class="item-info">
+                        <span class="item-note">👤 ${item.note || 'بدون ملاحظة'}</span>
+                        <span class="item-id">ID: ${item.id}</span>
+                        <span class="item-date">تاريخ التعطيل: ${item.date || 'غير محدد'}</span>
+                    </div>
+                    <button class="btn-unblock" onclick="unblockSubscription('${item.id}')">إعادة تفعيل ♻️</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function showAlert(elementId, text, type) {
+        const el = document.getElementById(elementId);
+        el.className = `alert alert-${type}`;
+        el.innerText = text;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+</script>
+
+</body>
+</html>
