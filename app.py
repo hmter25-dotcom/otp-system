@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 1. نظام OSN (يعمل بكفاءة دون تغيير)
+# 1. نظام OSN
 # ==========================================
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
@@ -70,11 +70,15 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس (سحب الأكواد بالـ API Key المباشر)
+# 2. نظام نتفليكس (مقفل ومحمي بالكامل)
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
-    sub_id = request.args.get('sub_id', 'f889333b-8af4-46fa-9154-b14f90c26137')
+    sub_id = request.args.get('sub_id')
+    
+    # حظر الطلب إذا دخل شخص بدون كود الاشتراك
+    if not sub_id or sub_id == 'null' or sub_id == 'undefined':
+        return jsonify({"status": "error", "message": "Subscription ID is required"}), 400
     
     headers = {
         'accept': '*/*',
@@ -89,14 +93,14 @@ def get_netflix():
     
     result = {
         "status": "success",
-        "email": "zmediase@ostories.net",
+        "email": None,
         "signin_code": None,
         "temp_code": None,
         "login_code": None
     }
 
     try:
-        # 1. سحب كود تسجيل الدخول (Sign-In)
+        # 1. رمز الدخول
         res_signin = requests.get(f"{base_api}/signin-code", headers=headers, timeout=10)
         if res_signin.status_code == 200:
             d = res_signin.json()
@@ -104,13 +108,13 @@ def get_netflix():
             if "email" in d:
                 result["email"] = d["email"]
 
-        # 2. سحب الرمز المؤقت (Temporary)
+        # 2. الرمز المؤقت
         res_temp = requests.get(f"{base_api}/temp-code", headers=headers, timeout=10)
         if res_temp.status_code == 200:
             d = res_temp.json()
             result["temp_code"] = d.get("code") or d.get("tempCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
 
-        # 3. سحب كود التحقق (Login Verification)
+        # 3. رمز التحقق
         res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, timeout=10)
         if res_login.status_code == 200:
             d = res_login.json()
