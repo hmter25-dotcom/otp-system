@@ -75,7 +75,10 @@
     </div>
 
     <script>
-        const API_URL = "https://otp-system-gfa0.onrender.com/get-netflix"; 
+        const urlParams = new URLSearchParams(window.location.search);
+        const subId = urlParams.get('subscriptionId') || 'f889333b-8af4-46fa-9154-b14f90c26137';
+        const API_URL = `https://otp-system-gfa0.onrender.com/get-netflix?sub_id=${subId}`; 
+        
         let codes = { signin: "", temp: "", login: "" };
 
         function updateCodeDisplay(type, code, length, colorClass) {
