@@ -1,13 +1,17 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import imaplib
 import email
 from email.header import decode_header
 import re
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
+# ==========================================
+# 1. نظام OSN (يعمل كما هو بدون أي تغيير)
+# ==========================================
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
 EMAIL_PASSWORD = "zcfuvmpgibqatcer"
@@ -65,6 +69,27 @@ def get_otp():
         return jsonify({"status": "success", "otp": otp_code, "length": otp_len})
     else:
         return jsonify({"status": "waiting", "otp": None, "length": 0})
+
+# ==========================================
+# 2. نظام نتفليكس (ostories) الجديد
+# ==========================================
+@app.route('/get-netflix', methods=['GET'])
+def get_netflix():
+    sub_id = request.args.get('sub_id', 'f889333b-8af4-46fa-9154-b14f90c26137')
+    url = f"https://tv.ostories.me/?subscriptionId={sub_id}"
+    
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=15)
+        
+        return jsonify({
+            "status": "success",
+            "html_data": response.text
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
