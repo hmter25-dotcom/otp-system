@@ -7,6 +7,7 @@ import re
 import requests
 import json
 import os
+import uuid
 import datetime
 
 app = Flask(__name__)
@@ -14,34 +15,31 @@ CORS(app)
 
 ADMIN_PASSWORD = "admin@elevaraa1451"
 BLOCKLIST_FILE = "blocked_subs.json"
+MAPPING_FILE = "sub_mappings.json"
 
 def clean_sub_id(raw_str):
     if not raw_str:
         return ""
-    # استخراج نمط المعرف بدقة سواء كان رابط كامل أو مقصوص أو ID فقط
     match = re.search(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})', raw_str, re.I)
     if match:
         return match.group(1).lower()
-    return raw_str.strip()
+    return raw_str.strip().lower()
 
-def load_blocked():
-    if os.path.exists(BLOCKLIST_FILE):
+def load_json(filepath):
+    if os.path.exists(filepath):
         try:
-            with open(BLOCKLIST_FILE, "r") as f:
-                data = json.load(f)
-                if data and isinstance(data[0], str):
-                    return [{"id": x, "note": "اشتراك سابق", "date": ""} for x in data]
-                return data
+            with open(filepath, "r") as f:
+                return json.load(f)
         except Exception:
-            return []
-    return []
+            return {} if "mappings" in filepath else []
+    return {} if "mappings" in filepath else []
 
-def save_blocked(blocked_list):
+def save_json(filepath, data):
     try:
-        with open(BLOCKLIST_FILE, "w") as f:
-            json.dump(blocked_list, f)
+        with open(filepath, "w") as f:
+            json.dump(data, f)
     except Exception as e:
-        print("Error saving blocklist:", e)
+        print(f"Error saving {filepath}:", e)
 
 # ==========================================
 # 1. نظام OSN
@@ -104,7 +102,7 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس وفحص الحظر
+# 2. نظام نتفليكس وفحص الحظر والتحويل التلقائي
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
@@ -112,103 +110,121 @@ def get_netflix():
     sub_id = clean_sub_id(raw_sub)
     
     if not sub_id or sub_id in ['null', 'undefined']:
-        return jsonify({"status": "error", "message": "Subscription ID is required"}), 400
+        return jsonify({"status": "error", "message": "معرف الاشتراك مطلوب"}), 400
     
-    blocked_subs = load_blocked()
-    blocked_ids = [item["id"].lower() for item in blocked_subs]
-    
-    if sub_id.lower() in blocked_ids:
+    blocked = load_json(BLOCKLIST_FILE)
+    if sub_id in [b.get("id") if isinstance(b, dict) else b for b in blocked]:
         return jsonify({
             "status": "blocked", 
-            "message": "نعتذر، تم إيقاف صلاحية هذا الاشتراك لانتهاء فترة الاستخدام."
+            "message": "نعتذر، انتهت صلاحية هذا الرابط وتم استبداله أو إيقافه."
         }), 403
     
+    # فحص إذا كان هذا الرابط تم توليده كبديل لرابط أصلي
+    mappings = load_json(MAPPING_FILE)
+    backend_key = mappings.get(sub_id, sub_id)
+
     headers = {
-        'accept': '*/*',
-        'accept-language': 'ar,en-US;q=0.9,en;q=0.8',
-        'content-type': 'application/json',
-        'referer': f'https://tv.ostories.me/?subscriptionId={sub_id}',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'x-api-key': sub_id
+        'accept': 'application/json',
+        'referer': f'https://tv.ostories.me/?subscriptionId={backend_key}',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'x-api-key': backend_key
     }
 
     base_api = "https://tv.ostories.me/api/dealer-subscriptions"
-    
-    result = {
-        "status": "success",
-        "email": None,
-        "signin_code": None,
-        "temp_code": None,
-        "login_code": None
-    }
+    result = {"status": "success", "email": None, "signin_code": None, "temp_code": None, "login_code": None}
 
-    try:
-        res_signin = requests.get(f"{base_api}/signin-code", headers=headers, timeout=10)
-        if res_signin.status_code == 200:
-            d = res_signin.json()
-            result["signin_code"] = d.get("code") or d.get("signInCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
-            if "email" in d:
-                result["email"] = d["email"]
+    with requests.Session() as s:
+        s.headers.update(headers)
+        try:
+            r1 = s.get(f"{base_api}/signin-code", timeout=4)
+            if r1.status_code == 200:
+                d1 = r1.json()
+                result["signin_code"] = d1.get("code") or d1.get("signInCode")
+                result["email"] = d1.get("email") or d1.get("accountEmail")
+        except Exception:
+            pass
 
-        res_temp = requests.get(f"{base_api}/temp-code", headers=headers, timeout=10)
-        if res_temp.status_code == 200:
-            d = res_temp.json()
-            result["temp_code"] = d.get("code") or d.get("tempCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
+        try:
+            r2 = s.get(f"{base_api}/temp-code", timeout=4)
+            if r2.status_code == 200:
+                d2 = r2.json()
+                result["temp_code"] = d2.get("code") or d2.get("tempCode")
+                if not result["email"]:
+                    result["email"] = d2.get("email")
+        except Exception:
+            pass
 
-        res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, timeout=10)
-        if res_login.status_code == 200:
-            d = res_login.json()
-            result["login_code"] = d.get("code") or d.get("loginVerificationCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
+        try:
+            r3 = s.get(f"{base_api}/login-verification-code", timeout=4)
+            if r3.status_code == 200:
+                d3 = r3.json()
+                result["login_code"] = d3.get("code") or d3.get("loginVerificationCode")
+                if not result["email"]:
+                    result["email"] = d3.get("email")
+        except Exception:
+            pass
 
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+    return jsonify(result)
 
 # ==========================================
-# 3. لوحة الإدارة: الحظر، إلغاء الحظر، والتبديل
+# 3. لوحة الإدارة: التوليد التلقائي للرابط الجديد بضغطة زر
 # ==========================================
 @app.route('/admin/list-blocked', methods=['POST'])
 def admin_list_blocked():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
-    return jsonify({"status": "success", "blocked": load_blocked()})
+    return jsonify({"status": "success", "blocked": load_json(BLOCKLIST_FILE)})
 
-@app.route('/admin/block', methods=['POST'])
-def admin_block():
+@app.route('/admin/revoke-and-issue', methods=['POST'])
+def admin_revoke_and_issue():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
-        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+        return jsonify({"status": "error", "message": "غير مصرح"}), 401
     
-    target_id = clean_sub_id(data.get("sub_id", ""))
-    note = data.get("note", "").strip() or "اشتراك عميل"
-    
-    if not target_id:
-        return jsonify({"status": "error", "message": "يرجى إدخال الرابط أو المعرف بشكل صحيح"}), 400
+    current_sub = clean_sub_id(data.get("sub_id", ""))
+    if not current_sub:
+        return jsonify({"status": "error", "message": "يرجى وضع الرابط الحالي"}), 400
 
-    blocked = load_blocked()
-    existing = next((item for item in blocked if item["id"].lower() == target_id.lower()), None)
-    if existing:
-        existing["note"] = note
-    else:
-        now_str = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
-        blocked.append({"id": target_id, "note": note, "date": now_str})
-        
-    save_blocked(blocked)
-    return jsonify({"status": "success", "message": "تم تعطيل الرابط وحفظه بنجاح", "blocked": blocked})
+    # 1. إيجاد المعرف الأصلي إذا كان مربوطاً
+    mappings = load_json(MAPPING_FILE)
+    original_target = mappings.get(current_sub, current_sub)
+
+    # 2. تعطيل الرابط الحالي فوراً
+    blocked = load_json(BLOCKLIST_FILE)
+    now_time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
+    
+    # التأكد من عدم تكراره في المعطلين
+    blocked = [b for b in blocked if (b.get("id") if isinstance(b, dict) else b) != current_sub]
+    blocked.insert(0, {"id": current_sub, "date": now_time})
+    save_json(BLOCKLIST_FILE, blocked)
+
+    # 3. توليد معرف ورابط جديد كلياً تلقائياً
+    new_sub_id = str(uuid.uuid4())
+    mappings[new_sub_id] = original_target
+    save_json(MAPPING_FILE, mappings)
+
+    new_link = f"https://elevara1.shop/otp.netflix/?subscriptionId={new_sub_id}"
+
+    return jsonify({
+        "status": "success",
+        "message": "تم إلغاء الصلاحية السابقة وإصدار الرابط الجديد بنجاح",
+        "new_sub_id": new_sub_id,
+        "new_link": new_link,
+        "blocked": blocked
+    })
 
 @app.route('/admin/unblock', methods=['POST'])
 def admin_unblock():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
-        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+        return jsonify({"status": "error", "message": "غير مصرح"}), 401
     
     target_id = clean_sub_id(data.get("sub_id", ""))
-    blocked = load_blocked()
-    blocked = [item for item in blocked if item["id"].lower() != target_id.lower()]
-    save_blocked(blocked)
-    
-    return jsonify({"status": "success", "message": "تمت إعادة تفعيل الرابط بنجاح", "blocked": blocked})
+    blocked = load_json(BLOCKLIST_FILE)
+    blocked = [b for b in blocked if (b.get("id") if isinstance(b, dict) else b) != target_id]
+    save_json(BLOCKLIST_FILE, blocked)
+    return jsonify({"status": "success", "message": "تمت استعادة الصلاحية", "blocked": blocked})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
