@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 1. نظام OSN
+# 1. نظام OSN (يعمل بكفاءة دون تغيير)
 # ==========================================
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
@@ -70,17 +70,20 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس (سحب مباشر من الـ APIs)
+# 2. نظام نتفليكس (سحب الأكواد بالـ API Key المباشر)
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
     sub_id = request.args.get('sub_id', 'f889333b-8af4-46fa-9154-b14f90c26137')
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": f"https://tv.ostories.me/?subscriptionId={sub_id}"
+        'accept': '*/*',
+        'accept-language': 'ar,en-US;q=0.9,en;q=0.8',
+        'content-type': 'application/json',
+        'referer': f'https://tv.ostories.me/?subscriptionId={sub_id}',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'x-api-key': sub_id
     }
-    params = {"subscriptionId": sub_id}
 
     base_api = "https://tv.ostories.me/api/dealer-subscriptions"
     
@@ -93,25 +96,25 @@ def get_netflix():
     }
 
     try:
-        # 1. طلب رمز الدخول (Sign-In)
-        res_signin = requests.get(f"{base_api}/signin-code", headers=headers, params=params, timeout=10)
+        # 1. سحب كود تسجيل الدخول (Sign-In)
+        res_signin = requests.get(f"{base_api}/signin-code", headers=headers, timeout=10)
         if res_signin.status_code == 200:
-            data = res_signin.json()
-            result["signin_code"] = data.get("code") or data.get("signInCode") or data.get("data")
-            if "email" in data:
-                result["email"] = data["email"]
+            d = res_signin.json()
+            result["signin_code"] = d.get("code") or d.get("signInCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
+            if "email" in d:
+                result["email"] = d["email"]
 
-        # 2. طلب الرمز المؤقت (Temporary)
-        res_temp = requests.get(f"{base_api}/temp-code", headers=headers, params=params, timeout=10)
+        # 2. سحب الرمز المؤقت (Temporary)
+        res_temp = requests.get(f"{base_api}/temp-code", headers=headers, timeout=10)
         if res_temp.status_code == 200:
-            data = res_temp.json()
-            result["temp_code"] = data.get("code") or data.get("tempCode") or data.get("data")
+            d = res_temp.json()
+            result["temp_code"] = d.get("code") or d.get("tempCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
 
-        # 3. طلب رمز التحقق (Login Verification)
-        res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, params=params, timeout=10)
+        # 3. سحب كود التحقق (Login Verification)
+        res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, timeout=10)
         if res_login.status_code == 200:
-            data = res_login.json()
-            result["login_code"] = data.get("code") or data.get("loginVerificationCode") or data.get("data")
+            d = res_login.json()
+            result["login_code"] = d.get("code") or d.get("loginVerificationCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
 
         return jsonify(result)
     except Exception as e:
