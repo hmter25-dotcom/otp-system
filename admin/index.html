@@ -7,40 +7,46 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background: #090d16; color: #f8fafc; min-height: 100vh; padding: 30px 15px; display: flex; justify-content: center; }
-        .admin-box { width: 100%; max-width: 700px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .header p { color: #94a3b8; font-size: 14px; }
+        body { background: #090d16; color: #f8fafc; min-height: 100vh; padding: 25px 15px; display: flex; justify-content: center; }
+        .admin-box { width: 100%; max-width: 680px; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .header p { color: #94a3b8; font-size: 13px; }
         
-        .card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 25px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .input-group { margin-bottom: 18px; }
-        .input-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
-        .input-control { width: 100%; padding: 14px 16px; background: #0b0f19; border: 1px solid #334155; border-radius: 12px; color: #fff; font-size: 15px; outline: none; transition: 0.3s; }
-        .input-control:focus { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
+        .card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #cbd5e1; }
+        .input-control { width: 100%; padding: 13px 15px; background: #0b0f19; border: 1px solid #334155; border-radius: 10px; color: #fff; font-size: 14px; outline: none; transition: 0.3s; }
+        .input-control:focus { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
         
-        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; color: #fff; }
-        .btn-danger { background: #ef4444; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-primary { background: #3b82f6; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }
-        .btn-primary:hover { background: #2563eb; }
+        .btn { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; color: #fff; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover:not(:disabled) { background: #dc2626; }
+        .btn-primary { background: #3b82f6; }
+        .btn-primary:hover:not(:disabled) { background: #2563eb; }
+        .btn-replace { background: #8b5cf6; }
+        .btn-replace:hover:not(:disabled) { background: #7c3aed; }
 
-        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #f87171; display: flex; justify-content: space-between; align-items: center; }
-        
-        .item-card { background: #0b0f19; border: 1px solid #273548; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-        .item-info { display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
-        .item-note { font-size: 15px; font-weight: 700; color: #f1f5f9; }
-        .item-id { font-family: monospace; font-size: 12px; color: #60a5fa; word-break: break-all; direction: ltr; text-align: right; }
+        .result-box { display: none; background: #0f172a; border: 1px solid #8b5cf6; border-radius: 12px; padding: 15px; margin-top: 15px; }
+        .result-title { font-size: 13px; color: #c4b5fd; font-weight: 700; margin-bottom: 8px; }
+        .result-link { background: #1e293b; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #38bdf8; word-break: break-all; direction: ltr; margin-bottom: 10px; }
+
+        .section-title { font-size: 16px; font-weight: 800; margin-bottom: 15px; color: #f87171; display: flex; justify-content: space-between; align-items: center; }
+        .item-card { background: #0b0f19; border: 1px solid #273548; border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .item-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+        .item-note { font-size: 14px; font-weight: 700; color: #f1f5f9; }
+        .item-id { font-family: monospace; font-size: 11px; color: #60a5fa; word-break: break-all; direction: ltr; text-align: right; }
         .item-date { font-size: 11px; color: #64748b; }
         
-        .btn-unblock { background: #10b981; color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-unblock { background: #10b981; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
         .btn-unblock:hover { background: #059669; }
 
-        .alert { padding: 14px; border-radius: 10px; font-size: 14px; margin-bottom: 15px; display: none; text-align: center; font-weight: 700; }
+        .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; display: none; text-align: center; font-weight: 700; }
         .alert-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; }
         .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
-
-        .stats-badge { background: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 13px; color: #38bdf8; font-weight: 700; }
+        .alert-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid #3b82f6; }
+        .stats-badge { background: #1e293b; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -48,7 +54,7 @@
 <div class="admin-box">
     <div class="header">
         <h1>🛡️ لوحة التحكم والإدارة المركزية</h1>
-        <p>التحكم الكامل بتعطيل وإعادة تفعيل روابط العملاء بضغطة زر</p>
+        <p>التحكم الكامل بتعطيل، استبدال، وإعادة تفعيل روابط العملاء</p>
     </div>
 
     <!-- شاشة تسجيل الدخول -->
@@ -57,32 +63,61 @@
             <label>كلمة المرور السرية للمدير:</label>
             <input type="password" id="adminPass" class="input-control" placeholder="أدخل الرقم السري...">
         </div>
-        <button class="btn btn-primary" onclick="loginAdmin()">تسجيل الدخول</button>
+        <button class="btn btn-primary" id="loginBtn" onclick="loginAdmin()">تسجيل الدخول</button>
         <div id="loginAlert" class="alert alert-error" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- لوحة التحكم الفعلية -->
+    <!-- المحتوى الفعلي بعد الدخول -->
     <div id="controlPanel" style="display: none;">
         
-        <!-- قسم إضافة تعطيل جديد -->
+        <!-- قسم تبديل الاشتراك (تعطيل القديم + إصدار جديد) -->
+        <div class="card" style="border-right: 4px solid #8b5cf6;">
+            <div style="font-size: 16px; font-weight: 800; color: #a78bfa; margin-bottom: 12px;">🔄 تبديل اشتراك (تعطيل القديم وتوليد رابط جديد فوراً)</div>
+            
+            <div class="input-group">
+                <label>رابط الحساب القديم (الذي تريد تعطيله ومنع العميل منه):</label>
+                <input type="text" id="oldSubInput" class="input-control" placeholder="رابط الحساب المنتهي أو ID...">
+            </div>
+
+            <div class="input-group">
+                <label>رابط الحساب الجديد (الذي اشتريته من الموزع):</label>
+                <input type="text" id="newSubInput" class="input-control" placeholder="رابط الموزع الجديد https://tv.ostories.me/?subscriptionId=...">
+            </div>
+
+            <div class="input-group">
+                <label>اسم العميل / ملاحظة:</label>
+                <input type="text" id="replaceNote" class="input-control" placeholder="مثال: تجديد اشتراك أحمد">
+            </div>
+
+            <button class="btn btn-replace" id="replaceBtn" onclick="replaceSubscription()">تعطيل القديم وتوليد الرابط الجديد ⚡</button>
+
+            <!-- صندوق ظهور الرابط الجديد بعد التوليد -->
+            <div id="resultBox" class="result-box">
+                <div class="result-title">✅ تم تعطيل القديم بنجاح! انسخ رابط العميل الجديد:</div>
+                <div class="result-link" id="generatedLink"></div>
+                <button class="btn btn-primary" id="copyNewBtn" onclick="copyGeneratedLink()">نسخ الرابط الجديد 📋</button>
+            </div>
+        </div>
+
+        <!-- قسم تعطيل سريع فقط -->
         <div class="card">
-            <div style="font-size: 18px; font-weight: 800; color: #38bdf8; margin-bottom: 15px;">🚫 تعطيل اشتراك جديد</div>
+            <div style="font-size: 16px; font-weight: 800; color: #38bdf8; margin-bottom: 12px;">🚫 تعطيل اشتراك فقط دون استبدال</div>
             <div id="actionAlert" class="alert"></div>
             
             <div class="input-group">
-                <label>رابط العميل الكامل أو معرف الاشتراك (ID):</label>
-                <input type="text" id="subInput" class="input-control" placeholder="مثال: https://... أو f889333b-...">
+                <label>رابط العميل أو معرف الاشتراك (ID):</label>
+                <input type="text" id="subInput" class="input-control" placeholder="ضع الرابط أو المعرف هنا...">
             </div>
 
             <div class="input-group">
-                <label>اسم العميل أو ملاحظة (لتتذكره لاحقاً):</label>
-                <input type="text" id="noteInput" class="input-control" placeholder="مثال: اشتراك محمد (نتفليكس)">
+                <label>اسم العميل أو ملاحظة:</label>
+                <input type="text" id="noteInput" class="input-control" placeholder="مثال: منتهي الصلاحية">
             </div>
 
-            <button class="btn btn-danger" onclick="blockSubscription()">تعطيل الرابط وحظره فوراً 🚫</button>
+            <button class="btn btn-danger" id="blockBtn" onclick="blockSubscription()">تعطيل الرابط وحظره فوراً 🚫</button>
         </div>
 
-        <!-- قائمة الاشتراكات المعطلة -->
+        <!-- قائمة المعطلين -->
         <div class="card">
             <div class="section-title">
                 <span>الاشتراكات المعطلة حالياً</span>
@@ -100,9 +135,19 @@
     const SERVER_URL = "https://otp-system-gfa0.onrender.com";
     let CURRENT_PASS = "";
 
+    function extractUUID(str) {
+        if (!str) return "";
+        const m = str.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+        return m ? m[0].toLowerCase() : str.trim();
+    }
+
     function loginAdmin() {
         const pass = document.getElementById('adminPass').value.trim();
         if (!pass) return;
+
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerText = "جاري التحقق...";
 
         fetch(`${SERVER_URL}/admin/list-blocked`, {
             method: 'POST',
@@ -111,6 +156,8 @@
         })
         .then(r => r.json())
         .then(data => {
+            btn.disabled = false;
+            btn.innerText = "تسجيل الدخول";
             if (data.status === 'success') {
                 CURRENT_PASS = pass;
                 document.getElementById('authCard').style.display = 'none';
@@ -120,7 +167,11 @@
                 showAlert('loginAlert', data.message || 'كلمة المرور غير صحيحة', 'error');
             }
         })
-        .catch(err => showAlert('loginAlert', 'تعذر الاتصال بالسيرفر', 'error'));
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerText = "تسجيل الدخول";
+            showAlert('loginAlert', 'تعذر الاتصال بالسيرفر، تأكد من تشغيل Render', 'error');
+        });
     }
 
     function fetchBlockedList() {
@@ -135,29 +186,100 @@
         });
     }
 
-    function blockSubscription() {
-        const subVal = document.getElementById('subInput').value.trim();
-        const noteVal = document.getElementById('noteInput').value.trim();
-        if (!subVal) {
-            showAlert('actionAlert', 'يرجى إدخال الرابط أو المعرف أولاً', 'error');
+    function replaceSubscription() {
+        const oldVal = document.getElementById('oldSubInput').value.trim();
+        const newVal = document.getElementById('newSubInput').value.trim();
+        const note = document.getElementById('replaceNote').value.trim() || 'اشتراك تم استبداله';
+        const btn = document.getElementById('replaceBtn');
+
+        const oldId = extractUUID(oldVal);
+        const newId = extractUUID(newVal);
+
+        if (!oldId || !newId) {
+            alert('يرجى إدخال رابط الحساب القديم ورابط الحساب الجديد!');
             return;
         }
+
+        btn.disabled = true;
+        btn.innerText = "جاري التبديل والتعطيل...";
 
         fetch(`${SERVER_URL}/admin/block`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({password: CURRENT_PASS, sub_id: subVal, note: noteVal})
+            body: JSON.stringify({password: CURRENT_PASS, sub_id: oldId, note: note + " (معطل ومستبدل)"})
         })
         .then(r => r.json())
         .then(data => {
+            btn.disabled = false;
+            btn.innerText = "تعطيل القديم وتوليد الرابط الجديد ⚡";
+            if (data.status === 'success') {
+                const fullNewLink = `https://elevara1.shop/otp.netflix/?subscriptionId=${newId}`;
+                document.getElementById('generatedLink').innerText = fullNewLink;
+                document.getElementById('resultBox').style.display = 'block';
+                document.getElementById('oldSubInput').value = '';
+                document.getElementById('newSubInput').value = '';
+                renderList(data.blocked);
+            } else {
+                alert(data.message || 'حدث خطأ في تعطيل الرابط القديم');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerText = "تعطيل القديم وتوليد الرابط الجديد ⚡";
+            alert('فشل الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت');
+        });
+    }
+
+    function copyGeneratedLink() {
+        const link = document.getElementById('generatedLink').innerText;
+        navigator.clipboard.writeText(link).then(() => {
+            const b = document.getElementById('copyNewBtn');
+            b.innerText = "تم النسخ بنجاح! ✓";
+            b.style.background = "#10b981";
+            setTimeout(() => {
+                b.innerText = "نسخ الرابط الجديد 📋";
+                b.style.background = "#3b82f6";
+            }, 2000);
+        });
+    }
+
+    function blockSubscription() {
+        const rawInput = document.getElementById('subInput').value.trim();
+        const noteVal = document.getElementById('noteInput').value.trim();
+        const btn = document.getElementById('blockBtn');
+
+        const subId = extractUUID(rawInput);
+        if (!subId) {
+            showAlert('actionAlert', 'يرجى إدخال الرابط أو المعرف أولاً', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "جاري التعطيل...";
+        showAlert('actionAlert', 'جاري التواصل مع السيرفر...', 'info');
+
+        fetch(`${SERVER_URL}/admin/block`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: CURRENT_PASS, sub_id: subId, note: noteVal})
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerText = "تعطيل الرابط وحظره فوراً 🚫";
             if (data.status === 'success') {
                 showAlert('actionAlert', 'تم تعطيل الرابط بنجاح وأصبح العميل محظوراً!', 'success');
                 document.getElementById('subInput').value = '';
                 document.getElementById('noteInput').value = '';
                 renderList(data.blocked);
             } else {
-                showAlert('actionAlert', data.message, 'error');
+                showAlert('actionAlert', data.message || 'حدث خطأ أثناء العملية', 'error');
             }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerText = "تعطيل الرابط وحظره فوراً 🚫";
+            showAlert('actionAlert', 'فشل الاتصال بالسيرفر، أعد المحاولة بعد قليل', 'error');
         });
     }
 
@@ -179,10 +301,10 @@
     function renderList(list) {
         const container = document.getElementById('blockedListContainer');
         const badge = document.getElementById('countBadge');
-        badge.innerText = `${list.length} معطل`;
+        badge.innerText = `${list ? list.length : 0} معطل`;
 
         if (!list || list.length === 0) {
-            container.innerHTML = '<p style="color: #64748b; font-size: 14px; text-align: center; padding: 20px;">لا يوجد أي روابط معطلة حالياً، جميع الاشتراكات تعمل بكفاءة.</p>';
+            container.innerHTML = '<p style="color: #64748b; font-size: 14px; text-align: center; padding: 15px;">لا يوجد أي روابط معطلة حالياً، جميع الاشتراكات تعمل بكفاءة.</p>';
             return;
         }
 
@@ -207,7 +329,9 @@
         el.className = `alert alert-${type}`;
         el.innerText = text;
         el.style.display = 'block';
-        setTimeout(() => { el.style.display = 'none'; }, 4000);
+        if (type !== 'info') {
+            setTimeout(() => { el.style.display = 'none'; }, 4000);
+        }
     }
 </script>
 
