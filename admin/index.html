@@ -8,29 +8,28 @@
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
         body { background: #070b14; color: #f8fafc; min-height: 100vh; padding: 25px 15px; display: flex; justify-content: center; }
-        .admin-box { width: 100%; max-width: 650px; position: relative; }
+        .admin-box { width: 100%; max-width: 600px; }
         
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.25s; display: none; }
+        .logout-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: none; }
         .logout-btn:hover { background: #ef4444; color: #fff; }
 
         .header { text-align: center; margin-bottom: 25px; }
-        .brands-logo { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .brands-logo img { height: 48px; border-radius: 10px; }
-        .header h1 { font-size: 24px; font-weight: 800; color: #ffffff; }
+        .brands-logo { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 12px; }
+        .brands-logo img { height: 45px; border-radius: 10px; }
+        .header h1 { font-size: 22px; font-weight: 800; color: #ffffff; }
         .header p { color: #64748b; font-size: 13px; margin-top: 4px; }
 
         .card { background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
-        .card-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
+        .input-control { width: 100%; padding: 14px 16px; background: #070b14; border: 1px solid #1e293b; border-radius: 10px; color: #ffffff; font-size: 14px; outline: none; transition: 0.25s; }
+        .input-control:focus { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
         
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #94a3b8; }
-        .input-control { width: 100%; padding: 13px 15px; background: #070b14; border: 1px solid #1e293b; border-radius: 10px; color: #ffffff; font-size: 14px; outline: none; transition: 0.25s; }
-        .input-control:focus { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
-        
-        .btn { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.25s; color: #fff; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.25s; color: #fff; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
+        /* الزر المطابق تماماً لصورتك */
         .btn-revoke { background: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
         .btn-revoke:hover:not(:disabled) { background: #dc2626; }
         .btn-primary { background: #2563eb; }
@@ -44,8 +43,7 @@
 
         .item-card { background: #070b14; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .item-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
-        .item-note { font-size: 14px; font-weight: 700; color: #f1f5f9; }
-        .item-id { font-family: monospace; font-size: 11px; color: #38bdf8; direction: ltr; text-align: right; }
+        .item-id { font-family: monospace; font-size: 11px; color: #f87171; direction: ltr; text-align: right; }
         .item-date { font-size: 11px; color: #64748b; }
         
         .btn-unblock { background: #059669; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
@@ -55,12 +53,13 @@
         .alert-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #059669; }
         .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #dc2626; }
 
+        /* نافذة التأكيد المنبثقة المطابقة لصورتك */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
-        .modal-box { background: #0f172a; border: 1px solid #334155; border-radius: 18px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.6); }
-        .modal-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+        .modal-box { background: #0f172a; border: 1px solid #334155; border-radius: 18px; max-width: 420px; width: 100%; padding: 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.6); }
+        .modal-title { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 10px; }
         .modal-body { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-        .modal-actions .btn { width: auto; padding: 10px 22px; }
+        .modal-actions .btn { width: auto; padding: 10px 20px; }
     </style>
 </head>
 <body>
@@ -77,62 +76,48 @@
             <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="Logo" onerror="this.style.display='none'">
         </div>
         <h1>مركز إدارة وتراخيص الاشتراكات</h1>
-        <p>النظام الإداري الموحد لإصدار وتعطيل تراخيص وصول العملاء</p>
+        <p>إلغاء الصلاحيات وإصدار الروابط الجديدة بضغطة زر واحدة</p>
     </div>
 
-    <!-- شاشة التحقق السرية -->
+    <!-- شاشة تسجيل الدخول (مع الحفظ التلقائي) -->
     <div class="card" id="authCard">
         <div class="input-group">
             <label>رمز الدخول الإداري:</label>
             <input type="password" id="adminPass" class="input-control" placeholder="أدخل الرمز السري...">
         </div>
-        <button class="btn btn-primary" id="loginBtn" onclick="loginAdmin()">تسجيل الدخول للنظام</button>
+        <button class="btn btn-primary" id="loginBtn" onclick="loginAdmin()">دخول النظام</button>
         <div id="loginAlert" class="alert alert-error" style="margin-top: 14px;"></div>
     </div>
 
-    <!-- لوحة العمليات -->
+    <!-- لوحة التحكم -->
     <div id="controlPanel" style="display: none;">
         
         <div id="actionAlert" class="alert"></div>
 
-        <!-- زر إلغاء الصلاحية وإصدار رابط جديد -->
+        <!-- قسم الإلغاء والتوليد التلقائي بضغطة زر -->
         <div class="card" style="border-top: 3px solid #ef4444;">
-            <div class="card-title" style="color: #f87171;">
-                <span>إلغاء الصلاحية وإصدار رابط جديد</span>
-            </div>
-            
             <div class="input-group">
-                <label>رابط الوصول الحالي المراد إلغاؤه:</label>
-                <input type="text" id="oldSubInput" class="input-control" placeholder="ألصق رابط العميل القديم هنا...">
-            </div>
-
-            <div class="input-group">
-                <label>معرف أو رابط التعيين الجديد:</label>
-                <input type="text" id="newSubInput" class="input-control" placeholder="ألصق الرابط الجديد أو المعرف...">
-            </div>
-
-            <div class="input-group">
-                <label>اسم المشترك / الملاحظة:</label>
-                <input type="text" id="replaceNote" class="input-control" placeholder="مثال: تجديد اشتراك نتفليكس - محمد">
+                <label>رابط الوصول الحالي أو المعرف (ID):</label>
+                <input type="text" id="targetSubInput" class="input-control" placeholder="ألصق الرابط الحالي هنا لتعطيله وإصدار الجديد فوراً...">
             </div>
 
             <button class="btn btn-revoke" onclick="openRevokeModal()">
                 <span>إلغاء الصلاحية وإصدار رابط جديد</span>
             </button>
 
-            <!-- صندوق الرابط الجديد -->
+            <!-- صندوق ظهور الرابط الجديد المنسوخ تلقائياً -->
             <div id="resultBox" class="result-box">
-                <div class="result-title">✓ تم إلغاء الصلاحية القديمة بنجاح! الرابط الجديد للعميل:</div>
+                <div class="result-title">✓ تم إلغاء الصلاحية ونسخ الرابط الجديد لحافظتك تلقائياً:</div>
                 <div class="result-link" id="generatedLink"></div>
-                <button class="btn btn-primary" id="copyNewBtn" onclick="copyGeneratedLink()">نسخ الرابط الجديد 📋</button>
+                <button class="btn btn-primary" id="copyNewBtn" onclick="copyGeneratedLink()">نسخ الرابط مجدداً 📋</button>
             </div>
         </div>
 
-        <!-- قائمة الاشتراكات المعلقة والملغاة -->
+        <!-- قائمة الروابط المعطلة -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div class="card-title" style="margin: 0; color: #cbd5e1;">الاشتراكات المعلقة والملغاة</div>
-                <span id="countBadge" style="background:#1e293b; padding:4px 12px; border-radius:12px; font-size:12px; color:#38bdf8;">0 اشتراك</span>
+                <div style="font-size: 15px; font-weight: 800; color: #cbd5e1;">الروابط المعطلة والملغاة</div>
+                <span id="countBadge" style="background:#1e293b; padding:3px 10px; border-radius:10px; font-size:12px; color:#f87171;">0 معطل</span>
             </div>
             <div id="blockedListContainer">
                 <p style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">جاري المزامنة...</p>
@@ -141,16 +126,16 @@
     </div>
 </div>
 
-<!-- نافذة التأكيد المنبثقة -->
+<!-- نافذة التأكيد المنبثقة (مطابقة للصورة) -->
 <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
-        <div class="modal-title">إلغاء الصلاحية وإصدار رابط جديد</div>
+        <div class="modal-title">Revoke & Issue New Link</div>
         <div class="modal-body">
             أي شخص لديه رابط الوصول الحالي سيفقد إمكانية الوصول فوراً. سيتم إصدار رابط وصول جديد ونسخه إلى الحافظة تلقائياً. هل ترغب بالاستمرار؟
         </div>
         <div class="modal-actions">
-            <button class="btn btn-cancel" onclick="closeRevokeModal()">إلغاء</button>
-            <button class="btn btn-revoke" id="confirmRevokeBtn" onclick="executeRevokeAndIssue()">تأكيد العملية</button>
+            <button class="btn btn-cancel" onclick="closeRevokeModal()">Cancel</button>
+            <button class="btn btn-revoke" id="confirmRevokeBtn" onclick="executeRevokeAndIssue()">Confirm</button>
         </div>
     </div>
 </div>
@@ -165,19 +150,14 @@
         return m ? m[0].toLowerCase() : str.trim();
     }
 
-    // فحص تلقائي للجلسة عند فتح الصفحة
+    // تذكر تسجيل الدخول دائماً
     window.addEventListener("DOMContentLoaded", () => {
-        if (CURRENT_PASS) {
-            verifyAndLoad(CURRENT_PASS, true);
-        }
+        if (CURRENT_PASS) verifyAndLoad(CURRENT_PASS, true);
     });
 
     function verifyAndLoad(pass, isAuto = false) {
         const btn = document.getElementById('loginBtn');
-        if (!isAuto) {
-            btn.disabled = true;
-            btn.innerText = "جاري التحقق من الصلاحيات...";
-        }
+        if (!isAuto) { btn.disabled = true; btn.innerText = "جاري التحقق..."; }
 
         fetch(`${SERVER_URL}/admin/list-blocked`, {
             method: 'POST',
@@ -186,13 +166,9 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (!isAuto) {
-                btn.disabled = false;
-                btn.innerText = "تسجيل الدخول للنظام";
-            }
+            if (!isAuto) { btn.disabled = false; btn.innerText = "دخول النظام"; }
             if (data.status === 'success') {
                 CURRENT_PASS = pass;
-                // حفظ الجلسة دائماً في المتصفح
                 localStorage.setItem("elevaraa_admin_token", pass);
                 document.getElementById('authCard').style.display = 'none';
                 document.getElementById('controlPanel').style.display = 'block';
@@ -210,7 +186,7 @@
         .catch(() => {
             if (!isAuto) {
                 btn.disabled = false;
-                btn.innerText = "تسجيل الدخول للنظام";
+                btn.innerText = "دخول النظام";
                 showTopAlert('تعذر الاتصال بالخادم، يرجى المحاولة بعد لحظات', 'error');
             }
         });
@@ -218,8 +194,7 @@
 
     function loginAdmin() {
         const pass = document.getElementById('adminPass').value.trim();
-        if (!pass) return;
-        verifyAndLoad(pass, false);
+        if (pass) verifyAndLoad(pass, false);
     }
 
     function logoutAdmin() {
@@ -232,10 +207,9 @@
     }
 
     function openRevokeModal() {
-        const oldVal = document.getElementById('oldSubInput').value.trim();
-        const newVal = document.getElementById('newSubInput').value.trim();
-        if (!oldVal || !newVal) {
-            alert('يرجى تعبئة حقلي الرابط الحالي والرابط البديل أولاً.');
+        const val = document.getElementById('targetSubInput').value.trim();
+        if (!val) {
+            alert('يرجى وضع الرابط أو المعرف الحالي أولاً.');
             return;
         }
         document.getElementById('confirmModal').style.display = 'flex';
@@ -246,52 +220,49 @@
     }
 
     function executeRevokeAndIssue() {
-        const oldId = extractUUID(document.getElementById('oldSubInput').value.trim());
-        const newId = extractUUID(document.getElementById('newSubInput').value.trim());
-        const note = document.getElementById('replaceNote').value.trim() || 'اشتراك تم تجديده';
+        const rawInput = document.getElementById('targetSubInput').value.trim();
+        const subId = extractUUID(rawInput);
         const confirmBtn = document.getElementById('confirmRevokeBtn');
 
-        if (!oldId || !newId) {
-            alert('تعذر استخراج معرف الاشتراك، تأكد من صحة الروابط المدخلة.');
+        if (!subId) {
+            alert('تعذر استخراج معرف الاشتراك، تأكد من صحة الرابط.');
             closeRevokeModal();
             return;
         }
 
         confirmBtn.disabled = true;
-        confirmBtn.innerText = "جاري المعالجة...";
+        confirmBtn.innerText = "Processing...";
 
-        fetch(`${SERVER_URL}/admin/block`, {
+        fetch(`${SERVER_URL}/admin/revoke-and-issue`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({password: CURRENT_PASS, sub_id: oldId, note: note + " (صلاحية ملغاة)"})
+            body: JSON.stringify({password: CURRENT_PASS, sub_id: subId})
         })
         .then(r => r.json())
         .then(data => {
             confirmBtn.disabled = false;
-            confirmBtn.innerText = "تأكيد العملية";
+            confirmBtn.innerText = "Confirm";
             closeRevokeModal();
 
             if (data.status === 'success') {
-                const newAccessUrl = `https://elevara1.shop/otp.netflix/?subscriptionId=${newId}`;
-                document.getElementById('generatedLink').innerText = newAccessUrl;
+                document.getElementById('generatedLink').innerText = data.new_link;
                 document.getElementById('resultBox').style.display = 'block';
 
-                navigator.clipboard.writeText(newAccessUrl).catch(() => {});
-                showTopAlert('تم إلغاء صلاحية الرابط القديم، وتوليد الرابط الجديد ونسخه للحافظة بنجاح! ✓', 'success');
+                // نسخ فوري للحافظة
+                navigator.clipboard.writeText(data.new_link).catch(() => {});
 
-                document.getElementById('oldSubInput').value = '';
-                document.getElementById('newSubInput').value = '';
-                document.getElementById('replaceNote').value = '';
+                showTopAlert('✓ تم تعطيل الرابط السابق، وإصدار الرابط الجديد ونسخه إلى الحافظة تلقائياً!', 'success');
+                document.getElementById('targetSubInput').value = '';
                 renderList(data.blocked);
             } else {
-                showTopAlert(data.message || 'حدث خطأ أثناء تنفيذ العملية', 'error');
+                showTopAlert(data.message || 'حدث خطأ أثناء العملية', 'error');
             }
         })
         .catch(() => {
             confirmBtn.disabled = false;
-            confirmBtn.innerText = "تأكيد العملية";
+            confirmBtn.innerText = "Confirm";
             closeRevokeModal();
-            showTopAlert('تعذر إتمام العملية، يرجى مراجعة اتصال الشبكة', 'error');
+            showTopAlert('تعذر الاتصال بالسيرفر', 'error');
         });
     }
 
@@ -302,7 +273,7 @@
             b.innerText = "تم النسخ بنجاح! ✓";
             b.style.background = "#10b981";
             setTimeout(() => {
-                b.innerText = "نسخ الرابط الجديد 📋";
+                b.innerText = "نسخ الرابط مجدداً 📋";
                 b.style.background = "#2563eb";
             }, 2000);
         });
@@ -326,23 +297,24 @@
     function renderList(list) {
         const container = document.getElementById('blockedListContainer');
         const badge = document.getElementById('countBadge');
-        badge.innerText = `${list ? list.length : 0} اشتراك`;
+        badge.innerText = `${list ? list.length : 0} معطل`;
 
         if (!list || list.length === 0) {
-            container.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">لا توجد اشتراكات ملغاة حالياً، جميع الروابط تعمل بصلاحيات نشطة.</p>';
+            container.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; padding: 15px;">لا توجد روابط معطلة، جميع الروابط تعمل بكفاءة.</p>';
             return;
         }
 
         let html = '';
         list.forEach(item => {
+            const id = typeof item === 'object' ? item.id : item;
+            const date = typeof item === 'object' ? item.date : '—';
             html += `
                 <div class="item-card">
                     <div class="item-info">
-                        <span class="item-note">${item.note || 'بدون تفاصيل'}</span>
-                        <span class="item-id">${item.id}</span>
-                        <span class="item-date">تاريخ الإلغاء: ${item.date || '—'}</span>
+                        <span class="item-id">${id}</span>
+                        <span class="item-date">تاريخ التعطيل: ${date || '—'}</span>
                     </div>
-                    <button class="btn-unblock" onclick="unblockSubscription('${item.id}')">استعادة الصلاحية ♻️</button>
+                    <button class="btn-unblock" onclick="unblockSubscription('${id}')">إلغاء الحظر ♻️</button>
                 </div>
             `;
         });
@@ -350,7 +322,7 @@
     }
 
     function showTopAlert(text, type) {
-        const el = document.getElementById(type === 'error' && document.getElementById('authCard').style.display !== 'none' ? 'loginAlert' : 'actionAlert');
+        const el = document.getElementById('actionAlert');
         el.className = `alert alert-${type}`;
         el.innerText = text;
         el.style.display = 'block';
