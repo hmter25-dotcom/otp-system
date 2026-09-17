@@ -5,9 +5,38 @@ import email
 from email.header import decode_header
 import re
 import requests
+import json
+import os
+import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+# كلمة المرور السرية الخاصة بك لدخول لوحة التحكم
+ADMIN_PASSWORD = "admin@elevaraa1451"
+
+# ملف تخزين الاشتراكات المعطلة وملاحظاتها
+BLOCKLIST_FILE = "blocked_subs.json"
+
+def load_blocked():
+    if os.path.exists(BLOCKLIST_FILE):
+        try:
+            with open(BLOCKLIST_FILE, "r") as f:
+                data = json.load(f)
+                # دعم التوافقية لو كانت البيانات قديمة (قائمة نصوص عادية)
+                if data and isinstance(data[0], str):
+                    return [{"id": x, "note": "اشتراك عميل", "date": ""} for x in data]
+                return data
+        except Exception:
+            return []
+    return []
+
+def save_blocked(blocked_list):
+    try:
+        with open(BLOCKLIST_FILE, "w") as f:
+            json.dump(blocked_list, f)
+    except Exception as e:
+        print("Error saving blocklist:", e)
 
 # ==========================================
 # 1. نظام OSN
@@ -70,15 +99,24 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس (مقفل ومحمي بالكامل)
+# 2. نظام نتفليكس وفحص الحظر
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
     sub_id = request.args.get('sub_id')
     
-    # حظر الطلب إذا دخل شخص بدون كود الاشتراك
-    if not sub_id or sub_id == 'null' or sub_id == 'undefined':
+    if not sub_id or sub_id in ['null', 'undefined']:
         return jsonify({"status": "error", "message": "Subscription ID is required"}), 400
+    
+    # فحص هل الاشتراك موجود في قائمة المحظورين؟
+    blocked_subs = load_blocked()
+    blocked_ids = [item["id"] for item in blocked_subs]
+    
+    if sub_id in blocked_ids:
+        return jsonify({
+            "status": "blocked", 
+            "message": "نعتذر، تم إيقاف صلاحية هذا الاشتراك لانتهاء فترة الاستخدام."
+        }), 403
     
     headers = {
         'accept': '*/*',
@@ -100,7 +138,6 @@ def get_netflix():
     }
 
     try:
-        # 1. رمز الدخول
         res_signin = requests.get(f"{base_api}/signin-code", headers=headers, timeout=10)
         if res_signin.status_code == 200:
             d = res_signin.json()
@@ -108,13 +145,11 @@ def get_netflix():
             if "email" in d:
                 result["email"] = d["email"]
 
-        # 2. الرمز المؤقت
         res_temp = requests.get(f"{base_api}/temp-code", headers=headers, timeout=10)
         if res_temp.status_code == 200:
             d = res_temp.json()
             result["temp_code"] = d.get("code") or d.get("tempCode") or (d.get("data", {}).get("code") if isinstance(d.get("data"), dict) else d.get("data"))
 
-        # 3. رمز التحقق
         res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, timeout=10)
         if res_login.status_code == 200:
             d = res_login.json()
@@ -123,6 +158,59 @@ def get_netflix():
         return jsonify(result)
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+
+# ==========================================
+# 3. دوال لوحة التحكم الإدارية الاحترافية
+# ==========================================
+@app.route('/admin/list-blocked', methods=['POST'])
+def admin_list_blocked():
+    data = request.get_json() or {}
+    if data.get("password") != ADMIN_PASSWORD:
+        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+    return jsonify({"status": "success", "blocked": load_blocked()})
+
+@app.route('/admin/block', methods=['POST'])
+def admin_block():
+    data = request.get_json() or {}
+    if data.get("password") != ADMIN_PASSWORD:
+        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+    
+    raw_sub = data.get("sub_id", "").strip()
+    note = data.get("note", "").strip() or "عميل بدون اسم"
+    
+    if not raw_sub:
+        return jsonify({"status": "error", "message": "يرجى إدخال الرابط أو المعرف"}), 400
+    
+    # استخراج الـ ID بدقة لو أدخل المستخدم الرابط كاملاً
+    match = re.search(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})', raw_sub, re.I)
+    target_id = match.group(1) if match else raw_sub
+
+    blocked = load_blocked()
+    # التحقق هل هو معطل مسبقاً؟ لو موجود نحدث ملاحظته فقط
+    existing = next((item for item in blocked if item["id"] == target_id), None)
+    if existing:
+        existing["note"] = note
+    else:
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
+        blocked.append({"id": target_id, "note": note, "date": now_str})
+        
+    save_blocked(blocked)
+    return jsonify({"status": "success", "message": "تم تعطيل الرابط بنجاح", "blocked": blocked})
+
+@app.route('/admin/unblock', methods=['POST'])
+def admin_unblock():
+    data = request.get_json() or {}
+    if data.get("password") != ADMIN_PASSWORD:
+        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+    
+    target_id = data.get("sub_id", "").strip()
+    blocked = load_blocked()
+    
+    # حذف المعرف من قائمة الحظر لإعادة تفعيله فوراً
+    blocked = [item for item in blocked if item["id"] != target_id]
+    save_blocked(blocked)
+    
+    return jsonify({"status": "success", "message": "تمت إعادة تشغيل وتفعيل الرابط بنجاح", "blocked": blocked})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
