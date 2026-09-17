@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 1. نظام OSN (يعمل كما هو بدون أي تغيير)
+# 1. نظام OSN
 # ==========================================
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
@@ -35,7 +35,6 @@ def get_genius_otp():
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-                    
                     sender = str(msg.get("From", "")).lower()
                     if "osn" not in sender:
                         continue 
@@ -71,23 +70,50 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس (ostories) الجديد
+# 2. نظام نتفليكس (سحب مباشر من الـ APIs)
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
     sub_id = request.args.get('sub_id', 'f889333b-8af4-46fa-9154-b14f90c26137')
-    url = f"https://tv.ostories.me/?subscriptionId={sub_id}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": f"https://tv.ostories.me/?subscriptionId={sub_id}"
+    }
+    params = {"subscriptionId": sub_id}
+
+    base_api = "https://tv.ostories.me/api/dealer-subscriptions"
     
+    result = {
+        "status": "success",
+        "email": "zmediase@ostories.net",
+        "signin_code": None,
+        "temp_code": None,
+        "login_code": None
+    }
+
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        response = requests.get(url, headers=headers, timeout=15)
-        
-        return jsonify({
-            "status": "success",
-            "html_data": response.text
-        })
+        # 1. طلب رمز الدخول (Sign-In)
+        res_signin = requests.get(f"{base_api}/signin-code", headers=headers, params=params, timeout=10)
+        if res_signin.status_code == 200:
+            data = res_signin.json()
+            result["signin_code"] = data.get("code") or data.get("signInCode") or data.get("data")
+            if "email" in data:
+                result["email"] = data["email"]
+
+        # 2. طلب الرمز المؤقت (Temporary)
+        res_temp = requests.get(f"{base_api}/temp-code", headers=headers, params=params, timeout=10)
+        if res_temp.status_code == 200:
+            data = res_temp.json()
+            result["temp_code"] = data.get("code") or data.get("tempCode") or data.get("data")
+
+        # 3. طلب رمز التحقق (Login Verification)
+        res_login = requests.get(f"{base_api}/login-verification-code", headers=headers, params=params, timeout=10)
+        if res_login.status_code == 200:
+            data = res_login.json()
+            result["login_code"] = data.get("code") or data.get("loginVerificationCode") or data.get("data")
+
+        return jsonify(result)
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
