@@ -3,146 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة استلام الأكواد | مجموعة متاجرنا</title>
+    <title>بوابة استلام أكواد الاشتراك</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #020617 100%); color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 30px 15px; }
-        .brands-container { display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 30px; }
-        .brand-logo { height: 60px; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); }
-        .container { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 20px; }
-        .card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 25px; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); }
-        .card-email { border-right: 4px solid #6366f1; } .card-signin { border-right: 4px solid #38bdf8; } .card-temp { border-right: 4px solid #f59e0b; } .card-login { border-right: 4px solid #10b981; }
-        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 17px; font-weight: 700; }
-        .card-email .card-header { color: #818cf8; } .card-signin .card-header { color: #38bdf8; } .card-temp .card-header { color: #fbd38d; } .card-login .card-header { color: #6ee7b7; }
-        .email-box { background: #0f172a; border: 1px solid #334155; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #fff; direction: ltr; }
-        .code-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; direction: ltr; }
-        .code-box { width: 50px; height: 60px; background: #0f172a; border: 2px solid #334155; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: 800; color: #94a3b8; transition: all 0.3s ease; }
-        .code-box.active { color: #fff; border-color: currentColor; box-shadow: 0 0 15px currentColor; }
-        .copy-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.3s ease; }
-        .btn-blue { background: #3b82f6; } .btn-blue:hover { background: #2563eb; } .btn-gray { background: #475569; } .btn-gray:hover { background: #334155; } .btn-success { background: #10b981 !important; }
-        .loader-text { text-align: center; color: #94a3b8; font-size: 14px; margin-bottom: 15px; }
-        .support-section { text-align: center; padding-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin-top: 25px; }
-        .support-title { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
-        .support-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
-        .telegram-btn-support { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #229ED9; color: #ffffff; text-decoration: none; padding: 12px 36px; border-radius: 50px; font-size: 16px; font-weight: 700; box-shadow: 0 8px 25px rgba(34, 158, 217, 0.4); transition: all 0.3s ease; direction: ltr; }
-        .telegram-btn-support:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(34, 158, 217, 0.6); background: #2bb3f3; }
-        .telegram-btn-support svg { width: 22px; height: 22px; }
-        .error-overlay { display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 20px; border-radius: 16px; text-align: center; font-weight: 700; font-size: 16px; margin-bottom: 15px; }
+        body { background: #070b14; color: #ffffff; min-height: 100vh; padding: 25px 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 480px; }
+
+        .brand-header { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 22px; }
+        .brand-header img { height: 50px; border-radius: 12px; }
+
+        .card { background: #0f172a; border-radius: 18px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .card-header { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #94a3b8; }
+        
+        .val-display { background: #070b14; border: 1px solid #1e293b; border-radius: 12px; padding: 14px; text-align: center; font-size: 15px; font-weight: 700; color: #38bdf8; word-break: break-all; margin-bottom: 12px; }
+        
+        .code-boxes { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; direction: ltr; }
+        .code-box { width: 44px; height: 50px; background: #070b14; border: 1px solid #1e293b; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #38bdf8; }
+
+        .btn { width: 100%; padding: 13px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.25s; }
+        .btn-blue { background: #2563eb; color: #fff; }
+        .btn-blue:hover { background: #1d4ed8; }
+        .btn-green { background: #059669; color: #fff; text-decoration: none; display: flex; justify-content: center; align-items: center; }
+        .btn-green:hover { background: #047857; }
+
+        .blocked-screen { display: none; text-align: center; padding: 40px 20px; background: #0f172a; border-radius: 20px; border: 1px solid #ef4444; }
+        .blocked-screen h2 { color: #f87171; margin-bottom: 10px; font-size: 20px; }
+        .blocked-screen p { color: #94a3b8; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="brands-container">
-        <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
-        <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" onerror="this.style.display='none'">
+<div class="container">
+    <div class="brand-header">
+        <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Logo" onerror="this.style.display='none'">
+        <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="Logo" onerror="this.style.display='none'">
     </div>
 
-    <div class="container">
-        <div id="errorBox" class="error-overlay">⚠️ الرابط غير صالح أو ناقص. يرجى استخدام الرابط الكامل المرسل إليك من المتجر.</div>
-
-        <div id="mainContent">
-            <div class="card card-email">
-                <div class="card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> بيانات الحساب (Email)</div>
-                <div class="email-box"><span id="emailDisplay">جاري جلب البيانات...</span></div>
-            </div>
-
-            <div class="card card-signin">
-                <div class="card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> رمز الدخول (Sign-In Code)</div>
-                <div class="loader-text" id="status-signin">بانتظار الرمز...</div>
-                <div class="code-container" id="container-signin"><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div></div>
-                <button class="copy-btn btn-blue" onclick="copyCode('signin', this)">نسخ الرمز</button>
-            </div>
-
-            <div class="card card-temp">
-                <div class="card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> رمز مؤقت (Temporary Code)</div>
-                <div class="loader-text" id="status-temp">بانتظار الرمز...</div>
-                <div class="code-container" id="container-temp"><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div></div>
-                <button class="copy-btn btn-gray" onclick="copyCode('temp', this)">نسخ الرمز</button>
-            </div>
-
-            <div class="card card-login">
-                <div class="card-header"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> رمز التحقق (Login Verification)</div>
-                <div class="loader-text" id="status-login">بانتظار الرمز...</div>
-                <div class="code-container" id="container-login"><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div></div>
-                <button class="copy-btn btn-gray" onclick="copyCode('login', this)">نسخ الرمز</button>
-            </div>
+    <div id="contentArea">
+        <!-- البريد الإلكتروني -->
+        <div class="card">
+            <div class="card-header">✉️ بيانات الحساب (Email)</div>
+            <div class="val-display" id="emailVal">جاري جلب البيانات...</div>
+            <button class="btn btn-blue" onclick="copyText('emailVal', this)">نسخ البريد</button>
         </div>
 
-        <div class="support-section">
-            <div class="support-title">لو احتجت لأي مساعدة؟</div>
-            <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
-            <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn-support">
-                <span>@elevaraa</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </a>
+        <!-- زر رابط الموافقة السريع للشاشة -->
+        <div class="card" id="approvalCard" style="display: none; border: 1px solid #10b981;">
+            <div class="card-header" style="color: #34d399;">🔗 رابط الموافقة المباشر (تسجيل دخول الشاشة)</div>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; text-align: center;">اضغط على الزر أدناه للموافقة الفورية وتأكيد الدخول:</p>
+            <a href="#" id="approvalLink" target="_blank" class="btn btn-green">فتح رابط الموافقة في نتفلكس ⚡</a>
+        </div>
+
+        <!-- رمز الدخول Sign-In Code -->
+        <div class="card" style="border-right: 3px solid #3b82f6;">
+            <div class="card-header" style="color: #60a5fa;">🔒 رمز الدخول (Sign-In Code)</div>
+            <div class="code-boxes" id="signInBoxes">
+                <div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div>
+            </div>
+            <button class="btn btn-blue" id="btnSignIn" onclick="copyCode('signIn')">نسخ الرمز</button>
+        </div>
+
+        <!-- رمز مؤقت Temporary Code -->
+        <div class="card" style="border-right: 3px solid #f59e0b;">
+            <div class="card-header" style="color: #fbbf24;">⏱️ رمز مؤقت (Temporary Code)</div>
+            <div class="code-boxes" id="tempBoxes">
+                <div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div>
+            </div>
+            <button class="btn btn-blue" id="btnTemp" onclick="copyCode('temp')">نسخ الرمز</button>
+        </div>
+
+        <!-- رمز التحقق Login Verification Code -->
+        <div class="card" style="border-right: 3px solid #10b981;">
+            <div class="card-header" style="color: #34d399;">🛡️ رمز التحقق (Login Verification)</div>
+            <div class="code-boxes" id="loginBoxes">
+                <div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div>
+            </div>
+            <button class="btn btn-blue" id="btnLogin" onclick="copyCode('login')">نسخ الرمز</button>
         </div>
     </div>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const subId = urlParams.get('subscriptionId');
+    <!-- شاشة الحظر -->
+    <div id="blockedScreen" class="blocked-screen">
+        <h2>⚠️ تم إيقاف صلاحية الرابط</h2>
+        <p id="blockedMsg">نعتذر، انتهت صلاحية هذا الرابط أو تم استبداله برابط جديد.</p>
+    </div>
+</div>
 
-        // حماية فورية: لو دخل العميل بدون كود الاشتراك يتم إخفاء كل المحتوى
+<script>
+    const SERVER_URL = "https://otp-system-gfa0.onrender.com";
+    
+    const urlText = window.location.href;
+    const match = urlText.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+    const subId = match ? match[0] : null;
+
+    let store = { signIn: "", temp: "", login: "" };
+
+    function renderCode(type, containerId, code) {
+        const c = document.getElementById(containerId);
+        store[type] = code || "";
+        if (!code) {
+            c.innerHTML = '<div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div><div class="code-box">-</div>';
+            return;
+        }
+        
+        if (code.startsWith("http")) {
+            c.innerHTML = `<div style="font-size:12px; word-break:break-all; color:#34d399; font-family:monospace; padding:8px;">رابط موافقة متوفر بالزر بالأعلى</div>`;
+            return;
+        }
+
+        let html = '';
+        for (let char of String(code).trim()) {
+            html += `<div class="code-box">${char}</div>`;
+        }
+        c.innerHTML = html;
+    }
+
+    function fetchData() {
         if (!subId) {
-            document.getElementById('mainContent').style.display = 'none';
-            document.getElementById('errorBox').style.display = 'block';
+            document.getElementById('emailVal').innerText = "رابط غير صالح";
+            return;
         }
 
-        const API_URL = `https://otp-system-gfa0.onrender.com/get-netflix?sub_id=${subId}`;
-        let codes = { signin: "", temp: "", login: "" };
-
-        function updateCodeDisplay(type, code, length, colorClass) {
-            const container = document.getElementById(`container-${type}`);
-            const status = document.getElementById(`status-${type}`);
-            if(code && String(code).length === length) {
-                codes[type] = String(code);
-                status.style.display = 'none';
-                container.innerHTML = '';
-                for(let i=0; i<length; i++) {
-                    container.innerHTML += `<div class="code-box active" style="color:${colorClass}; border-color:${colorClass}">${codes[type][i]}</div>`;
-                }
+        fetch(`${SERVER_URL}/get-netflix?sub_id=${subId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'blocked') {
+                document.getElementById('contentArea').style.display = 'none';
+                document.getElementById('blockedScreen').style.display = 'block';
+                if (data.message) document.getElementById('blockedMsg').innerText = data.message;
+                return;
             }
-        }
 
-        function copyCode(type, btnElement) {
-            if(!codes[type]) return;
-            navigator.clipboard.writeText(codes[type]).then(() => {
-                const originalText = btnElement.innerText;
-                const originalBg = btnElement.className;
-                btnElement.className = "copy-btn btn-success";
-                btnElement.innerText = "تم النسخ بنجاح! ✓";
-                setTimeout(() => { btnElement.className = originalBg; btnElement.innerText = originalText; }, 2000);
-            });
-        }
+            if (data.status === 'success') {
+                if (data.email) document.getElementById('emailVal').innerText = data.email;
+                
+                if (data.approval_url) {
+                    const card = document.getElementById('approvalCard');
+                    const link = document.getElementById('approvalLink');
+                    link.href = data.approval_url;
+                    card.style.display = 'block';
+                }
 
-        function fetchLiveCodes() {
-            if (!subId) return;
+                renderCode('signIn', 'signInBoxes', data.signin_code);
+                renderCode('temp', 'tempBoxes', data.temp_code);
+                renderCode('login', 'loginBoxes', data.login_code);
+            }
+        })
+        .catch(() => {});
+    }
 
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status === "success") {
-                        if(data.email) {
-                            document.getElementById('emailDisplay').innerText = data.email;
-                        }
-                        if(data.signin_code) {
-                            updateCodeDisplay('signin', data.signin_code, 4, '#38bdf8');
-                        }
-                        if(data.temp_code) {
-                            updateCodeDisplay('temp', data.temp_code, 4, '#fbd38d');
-                        }
-                        if(data.login_code) {
-                            updateCodeDisplay('login', data.login_code, 6, '#6ee7b7');
-                        }
-                    }
-                }).catch(err => console.error("Error:", err));
-        }
+    function copyText(id, btn) {
+        const text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const old = btn.innerText;
+            btn.innerText = "تم النسخ ✓";
+            setTimeout(() => btn.innerText = old, 2000);
+        });
+    }
 
-        if (subId) {
-            setInterval(fetchLiveCodes, 3000);
-            fetchLiveCodes();
-        }
-    </script>
+    function copyCode(type) {
+        const val = store[type];
+        if (!val) return;
+        navigator.clipboard.writeText(val).then(() => {
+            alert("تم نسخ الكود بنجاح!");
+        });
+    }
+
+    fetchData();
+    setInterval(fetchData, 4000);
+</script>
+
 </body>
 </html>
