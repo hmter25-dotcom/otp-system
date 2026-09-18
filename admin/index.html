@@ -29,7 +29,6 @@
         .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.25s; color: #fff; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* الزر المطابق تماماً لصورتك */
         .btn-revoke { background: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
         .btn-revoke:hover:not(:disabled) { background: #dc2626; }
         .btn-primary { background: #2563eb; }
@@ -53,7 +52,6 @@
         .alert-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #059669; }
         .alert-error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #dc2626; }
 
-        /* نافذة التأكيد المنبثقة المطابقة لصورتك */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
         .modal-box { background: #0f172a; border: 1px solid #334155; border-radius: 18px; max-width: 420px; width: 100%; padding: 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.6); }
         .modal-title { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 10px; }
@@ -79,7 +77,7 @@
         <p>إلغاء الصلاحيات وإصدار الروابط الجديدة بضغطة زر واحدة</p>
     </div>
 
-    <!-- شاشة تسجيل الدخول (مع الحفظ التلقائي) -->
+    <!-- تسجيل الدخول -->
     <div class="card" id="authCard">
         <div class="input-group">
             <label>رمز الدخول الإداري:</label>
@@ -94,18 +92,17 @@
         
         <div id="actionAlert" class="alert"></div>
 
-        <!-- قسم الإلغاء والتوليد التلقائي بضغطة زر -->
         <div class="card" style="border-top: 3px solid #ef4444;">
             <div class="input-group">
                 <label>رابط الوصول الحالي أو المعرف (ID):</label>
-                <input type="text" id="targetSubInput" class="input-control" placeholder="ألصق الرابط الحالي هنا لتعطيله وإصدار الجديد فوراً...">
+                <input type="text" id="targetSubInput" class="input-control" placeholder="ألصق الرابط الحالي لتعطيله وتوليد الجديد فوراً...">
             </div>
 
             <button class="btn btn-revoke" onclick="openRevokeModal()">
                 <span>إلغاء الصلاحية وإصدار رابط جديد</span>
             </button>
 
-            <!-- صندوق ظهور الرابط الجديد المنسوخ تلقائياً -->
+            <!-- صندوق الرابط الجديد -->
             <div id="resultBox" class="result-box">
                 <div class="result-title">✓ تم إلغاء الصلاحية ونسخ الرابط الجديد لحافظتك تلقائياً:</div>
                 <div class="result-link" id="generatedLink"></div>
@@ -113,7 +110,6 @@
             </div>
         </div>
 
-        <!-- قائمة الروابط المعطلة -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div style="font-size: 15px; font-weight: 800; color: #cbd5e1;">الروابط المعطلة والملغاة</div>
@@ -126,7 +122,7 @@
     </div>
 </div>
 
-<!-- نافذة التأكيد المنبثقة (مطابقة للصورة) -->
+<!-- نافذة التأكيد المنبثقة -->
 <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
         <div class="modal-title">Revoke & Issue New Link</div>
@@ -150,7 +146,6 @@
         return m ? m[0].toLowerCase() : str.trim();
     }
 
-    // تذكر تسجيل الدخول دائماً
     window.addEventListener("DOMContentLoaded", () => {
         if (CURRENT_PASS) verifyAndLoad(CURRENT_PASS, true);
     });
@@ -248,10 +243,9 @@
                 document.getElementById('generatedLink').innerText = data.new_link;
                 document.getElementById('resultBox').style.display = 'block';
 
-                // نسخ فوري للحافظة
                 navigator.clipboard.writeText(data.new_link).catch(() => {});
 
-                showTopAlert('✓ تم تعطيل الرابط السابق، وإصدار الرابط الجديد ونسخه إلى الحافظة تلقائياً!', 'success');
+                showTopAlert('✓ تم تعطيل الرابط السابق، وإصدار الرابط الجديد ونسخه للحافظة تلقائياً!', 'success');
                 document.getElementById('targetSubInput').value = '';
                 renderList(data.blocked);
             } else {
