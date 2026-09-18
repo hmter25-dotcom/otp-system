@@ -102,7 +102,7 @@ def get_otp():
         return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس وفحص الحظر والتحويل التلقائي
+# 2. نظام نتفليكس واستخراج رابط الموافقة
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
@@ -110,16 +110,16 @@ def get_netflix():
     sub_id = clean_sub_id(raw_sub)
     
     if not sub_id or sub_id in ['null', 'undefined']:
-        return jsonify({"status": "error", "message": "معرف الاشتراك مطلوب"}), 400
+        return jsonify({"status": "error", "message": "Subscription ID is required"}), 400
     
     blocked = load_json(BLOCKLIST_FILE)
-    if sub_id in [b.get("id") if isinstance(b, dict) else b for b in blocked]:
+    blocked_ids = [b.get("id") if isinstance(b, dict) else b for b in blocked]
+    if sub_id in blocked_ids:
         return jsonify({
             "status": "blocked", 
-            "message": "نعتذر، انتهت صلاحية هذا الرابط وتم استبداله أو إيقافه."
+            "message": "نعتذر، انتهت صلاحية هذا الرابط أو تم استبداله."
         }), 403
     
-    # فحص إذا كان هذا الرابط تم توليده كبديل لرابط أصلي
     mappings = load_json(MAPPING_FILE)
     backend_key = mappings.get(sub_id, sub_id)
 
@@ -131,21 +131,34 @@ def get_netflix():
     }
 
     base_api = "https://tv.ostories.me/api/dealer-subscriptions"
-    result = {"status": "success", "email": None, "signin_code": None, "temp_code": None, "login_code": None}
+    result = {
+        "status": "success",
+        "email": None,
+        "signin_code": None,
+        "temp_code": None,
+        "login_code": None,
+        "approval_url": None
+    }
 
     with requests.Session() as s:
         s.headers.update(headers)
+        
+        # Sign-in Code
         try:
-            r1 = s.get(f"{base_api}/signin-code", timeout=4)
+            r1 = s.get(f"{base_api}/signin-code", timeout=5)
             if r1.status_code == 200:
                 d1 = r1.json()
-                result["signin_code"] = d1.get("code") or d1.get("signInCode")
+                raw_c = d1.get("code") or d1.get("signInCode") or ""
+                result["signin_code"] = raw_c
                 result["email"] = d1.get("email") or d1.get("accountEmail")
+                if "netflix.com" in str(raw_c):
+                    result["approval_url"] = str(raw_c)
         except Exception:
             pass
 
+        # Temp Code
         try:
-            r2 = s.get(f"{base_api}/temp-code", timeout=4)
+            r2 = s.get(f"{base_api}/temp-code", timeout=5)
             if r2.status_code == 200:
                 d2 = r2.json()
                 result["temp_code"] = d2.get("code") or d2.get("tempCode")
@@ -154,20 +167,31 @@ def get_netflix():
         except Exception:
             pass
 
+        # Login Verification Code
         try:
-            r3 = s.get(f"{base_api}/login-verification-code", timeout=4)
+            r3 = s.get(f"{base_api}/login-verification-code", timeout=5)
             if r3.status_code == 200:
                 d3 = r3.json()
-                result["login_code"] = d3.get("code") or d3.get("loginVerificationCode")
+                raw_v = d3.get("code") or d3.get("loginVerificationCode") or d3.get("verificationUrl") or d3.get("url") or ""
+                result["login_code"] = raw_v
+                if "netflix.com" in str(raw_v):
+                    result["approval_url"] = str(raw_v)
                 if not result["email"]:
                     result["email"] = d3.get("email")
         except Exception:
             pass
 
+    # استخراج أي رابط موافقة يظهر في الردود
+    for k in ["signin_code", "temp_code", "login_code"]:
+        val = str(result.get(k) or "")
+        match_url = re.search(r'(https?://[^\s]+)', val)
+        if match_url:
+            result["approval_url"] = match_url.group(1)
+
     return jsonify(result)
 
 # ==========================================
-# 3. لوحة الإدارة: التوليد التلقائي للرابط الجديد بضغطة زر
+# 3. لوحة الإدارة: التوليد التلقائي للرابط
 # ==========================================
 @app.route('/admin/list-blocked', methods=['POST'])
 def admin_list_blocked():
@@ -186,20 +210,17 @@ def admin_revoke_and_issue():
     if not current_sub:
         return jsonify({"status": "error", "message": "يرجى وضع الرابط الحالي"}), 400
 
-    # 1. إيجاد المعرف الأصلي إذا كان مربوطاً
     mappings = load_json(MAPPING_FILE)
     original_target = mappings.get(current_sub, current_sub)
 
-    # 2. تعطيل الرابط الحالي فوراً
+    # تعطيل الرابط الحالي
     blocked = load_json(BLOCKLIST_FILE)
     now_time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
-    
-    # التأكد من عدم تكراره في المعطلين
     blocked = [b for b in blocked if (b.get("id") if isinstance(b, dict) else b) != current_sub]
     blocked.insert(0, {"id": current_sub, "date": now_time})
     save_json(BLOCKLIST_FILE, blocked)
 
-    # 3. توليد معرف ورابط جديد كلياً تلقائياً
+    # إنشاء معرف جديد وربطه
     new_sub_id = str(uuid.uuid4())
     mappings[new_sub_id] = original_target
     save_json(MAPPING_FILE, mappings)
@@ -208,7 +229,6 @@ def admin_revoke_and_issue():
 
     return jsonify({
         "status": "success",
-        "message": "تم إلغاء الصلاحية السابقة وإصدار الرابط الجديد بنجاح",
         "new_sub_id": new_sub_id,
         "new_link": new_link,
         "blocked": blocked
