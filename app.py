@@ -10,8 +10,19 @@ import os
 import uuid
 import datetime
 
+# استدعاء ملف كانفا المستقل
+try:
+    from canva import canva_bp
+except Exception as e:
+    canva_bp = None
+    print("Canva module import error:", e)
+
 app = Flask(__name__)
 CORS(app)
+
+# تشغيل مسار كانفا إن وُجد
+if canva_bp:
+    app.register_blueprint(canva_bp)
 
 ADMIN_PASSWORD = "admin@elevaraa1451"
 BLOCKLIST_FILE = "blocked_subs.json"
@@ -42,7 +53,18 @@ def save_json(filepath, data):
         print(f"Error saving {filepath}:", e)
 
 # ==========================================
-# 1. نظام OSN
+# مسار فحص النشاط والحفاظ على السيرفر 24/7
+# ==========================================
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({
+        "status": "active",
+        "service": "Elevaraa Core Unified Server",
+        "features": ["Netflix OTP", "OSN OTP", "Admin Dashboard", "Canva Auto-Invite"]
+    }), 200
+
+# ==========================================
+# 1. نظام OSN (قراءة الأكواد من Gmail)
 # ==========================================
 IMAP_SERVER = "imap.gmail.com"
 EMAIL_ACCOUNT = "elevaraa8@gmail.com"
@@ -53,73 +75,52 @@ def get_genius_otp():
         mail = imaplib.IMAP4_SSL(IMAP_SERVER, 993)
         mail.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         mail.select("INBOX")
-
         status, messages = mail.search(None, "ALL")
-        if status != "OK":
+        if status != "OK" or not messages[0]:
             return None, None
 
         email_ids = messages[0].split()
-        if not email_ids:
-            return None, None
-
         for e_id in reversed(email_ids[-15:]):
             status, msg_data = mail.fetch(e_id, '(BODY.PEEK[HEADER])')
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-                    sender = str(msg.get("From", "")).lower()
-                    if "osn" not in sender:
-                        continue 
-                        
+                    if "osn" not in str(msg.get("From", "")).lower():
+                        continue
                     subject = ""
-                    raw_subject = msg.get("Subject", "")
-                    if raw_subject:
-                        decoded_list = decode_header(raw_subject)
-                        for text, charset in decoded_list:
-                            if isinstance(text, bytes):
-                                subject += text.decode(charset or 'utf-8', errors='ignore')
-                            else:
-                                subject += str(text)
-
-                    match = re.search(r'\b(\d{4})\b', subject)
-                    if match:
-                        otp = match.group(1)
+                    raw_subj = msg.get("Subject", "")
+                    if raw_subj:
+                        for text, charset in decode_header(raw_subj):
+                            subject += text.decode(charset or 'utf-8', errors='ignore') if isinstance(text, bytes) else str(text)
+                    m = re.search(r'\b(\d{4})\b', subject)
+                    if m:
                         mail.logout()
-                        return otp, 4
-
+                        return m.group(1), 4
         mail.logout()
     except Exception as e:
-        print("Error:", e)
-    
+        print("Error in OSN IMAP:", e)
     return None, None
 
 @app.route('/get-otp', methods=['GET'])
 def get_otp():
-    otp_code, otp_len = get_genius_otp()
-    if otp_code:
-        return jsonify({"status": "success", "otp": otp_code, "length": otp_len})
-    else:
-        return jsonify({"status": "waiting", "otp": None, "length": 0})
+    code, l = get_genius_otp()
+    if code:
+        return jsonify({"status": "success", "otp": code, "length": l})
+    return jsonify({"status": "waiting", "otp": None, "length": 0})
 
 # ==========================================
-# 2. نظام نتفليكس واستخراج رابط الموافقة
+# 2. نظام نتفليكس (جلب الأكواد وروابط الموافقة)
 # ==========================================
 @app.route('/get-netflix', methods=['GET'])
 def get_netflix():
-    raw_sub = request.args.get('sub_id')
-    sub_id = clean_sub_id(raw_sub)
-    
-    if not sub_id or sub_id in ['null', 'undefined']:
-        return jsonify({"status": "error", "message": "Subscription ID is required"}), 400
-    
+    sub_id = clean_sub_id(request.args.get('sub_id'))
+    if not sub_id:
+        return jsonify({"status": "error", "message": "ID required"}), 400
+
     blocked = load_json(BLOCKLIST_FILE)
-    blocked_ids = [b.get("id") if isinstance(b, dict) else b for b in blocked]
-    if sub_id in blocked_ids:
-        return jsonify({
-            "status": "blocked", 
-            "message": "نعتذر، انتهت صلاحية هذا الرابط أو تم استبداله."
-        }), 403
-    
+    if sub_id in [b.get("id") if isinstance(b, dict) else b for b in blocked]:
+        return jsonify({"status": "blocked", "message": "نعتذر، انتهت صلاحية هذا الرابط."}), 403
+
     mappings = load_json(MAPPING_FILE)
     backend_key = mappings.get(sub_id, sub_id)
 
@@ -129,36 +130,21 @@ def get_netflix():
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'x-api-key': backend_key
     }
-
     base_api = "https://tv.ostories.me/api/dealer-subscriptions"
-    result = {
-        "status": "success",
-        "email": None,
-        "signin_code": None,
-        "temp_code": None,
-        "login_code": None,
-        "approval_url": None
-    }
+    result = {"status": "success", "email": None, "signin_code": None, "temp_code": None, "login_code": None, "approval_url": None}
 
     with requests.Session() as s:
         s.headers.update(headers)
-        
-        # Sign-in Code
         try:
-            r1 = s.get(f"{base_api}/signin-code", timeout=5)
+            r1 = s.get(f"{base_api}/signin-code", timeout=4)
             if r1.status_code == 200:
                 d1 = r1.json()
-                raw_c = d1.get("code") or d1.get("signInCode") or ""
-                result["signin_code"] = raw_c
+                result["signin_code"] = d1.get("code") or d1.get("signInCode")
                 result["email"] = d1.get("email") or d1.get("accountEmail")
-                if "netflix.com" in str(raw_c):
-                    result["approval_url"] = str(raw_c)
         except Exception:
             pass
-
-        # Temp Code
         try:
-            r2 = s.get(f"{base_api}/temp-code", timeout=5)
+            r2 = s.get(f"{base_api}/temp-code", timeout=4)
             if r2.status_code == 200:
                 d2 = r2.json()
                 result["temp_code"] = d2.get("code") or d2.get("tempCode")
@@ -166,38 +152,31 @@ def get_netflix():
                     result["email"] = d2.get("email")
         except Exception:
             pass
-
-        # Login Verification Code
         try:
-            r3 = s.get(f"{base_api}/login-verification-code", timeout=5)
+            r3 = s.get(f"{base_api}/login-verification-code", timeout=4)
             if r3.status_code == 200:
                 d3 = r3.json()
-                raw_v = d3.get("code") or d3.get("loginVerificationCode") or d3.get("verificationUrl") or d3.get("url") or ""
-                result["login_code"] = raw_v
-                if "netflix.com" in str(raw_v):
-                    result["approval_url"] = str(raw_v)
+                result["login_code"] = d3.get("code") or d3.get("loginVerificationCode") or d3.get("url")
                 if not result["email"]:
                     result["email"] = d3.get("email")
         except Exception:
             pass
 
-    # استخراج أي رابط موافقة يظهر في الردود
     for k in ["signin_code", "temp_code", "login_code"]:
-        val = str(result.get(k) or "")
-        match_url = re.search(r'(https?://[^\s]+)', val)
-        if match_url:
-            result["approval_url"] = match_url.group(1)
+        m_url = re.search(r'(https?://[^\s]+)', str(result.get(k) or ""))
+        if m_url:
+            result["approval_url"] = m_url.group(1)
 
     return jsonify(result)
 
 # ==========================================
-# 3. لوحة الإدارة: التوليد التلقائي للرابط
+# 3. لوحة الإدارة وتوليد وإلغاء الروابط
 # ==========================================
 @app.route('/admin/list-blocked', methods=['POST'])
 def admin_list_blocked():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
-        return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة"}), 401
+        return jsonify({"status": "error", "message": "رمز المرور غير صحيح"}), 401
     return jsonify({"status": "success", "blocked": load_json(BLOCKLIST_FILE)})
 
 @app.route('/admin/revoke-and-issue', methods=['POST'])
@@ -205,32 +184,28 @@ def admin_revoke_and_issue():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"status": "error", "message": "غير مصرح"}), 401
-    
+
     current_sub = clean_sub_id(data.get("sub_id", ""))
     if not current_sub:
-        return jsonify({"status": "error", "message": "يرجى وضع الرابط الحالي"}), 400
+        return jsonify({"status": "error", "message": "الرابط مطلوب"}), 400
 
     mappings = load_json(MAPPING_FILE)
     original_target = mappings.get(current_sub, current_sub)
 
-    # تعطيل الرابط الحالي
     blocked = load_json(BLOCKLIST_FILE)
     now_time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
     blocked = [b for b in blocked if (b.get("id") if isinstance(b, dict) else b) != current_sub]
     blocked.insert(0, {"id": current_sub, "date": now_time})
     save_json(BLOCKLIST_FILE, blocked)
 
-    # إنشاء معرف جديد وربطه
     new_sub_id = str(uuid.uuid4())
     mappings[new_sub_id] = original_target
     save_json(MAPPING_FILE, mappings)
 
-    new_link = f"https://elevara1.shop/otp.netflix/?subscriptionId={new_sub_id}"
-
     return jsonify({
         "status": "success",
         "new_sub_id": new_sub_id,
-        "new_link": new_link,
+        "new_link": f"https://elevara1.shop/otp.netflix/?subscriptionId={new_sub_id}",
         "blocked": blocked
     })
 
@@ -239,7 +214,6 @@ def admin_unblock():
     data = request.get_json() or {}
     if data.get("password") != ADMIN_PASSWORD:
         return jsonify({"status": "error", "message": "غير مصرح"}), 401
-    
     target_id = clean_sub_id(data.get("sub_id", ""))
     blocked = load_json(BLOCKLIST_FILE)
     blocked = [b for b in blocked if (b.get("id") if isinstance(b, dict) else b) != target_id]
