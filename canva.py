@@ -1,11 +1,16 @@
 from flask import Blueprint, request, jsonify
 import requests
+from requests.auth import HTTPProxyAuth
 import json
 import re
 
 canva_bp = Blueprint('canva_bp', __name__)
 
-PROXY_URL = "http://frngkmd:jhs8jlchdmdy@31.59.20.176:6754"
+# بيانات البروكسي الدقيقة من حسابك
+PROXY_HOST = "31.59.20.176"
+PROXY_PORT = "6754"
+PROXY_USER = "frngkmd"
+PROXY_PASS = "jhs8jlchdmdy"
 
 def trigger_canva_invite(target_email):
     url = "https://www.canva.com/_ajax/invitation/brand/invitations/create"
@@ -39,17 +44,19 @@ def trigger_canva_invite(target_email):
     }
 
     proxies = {
-        "http": PROXY_URL,
-        "https": PROXY_URL
+        "http": f"http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}",
+        "https": f"http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
     }
 
+    session = requests.Session()
+    session.proxies = proxies
+
     try:
-        res = requests.post(
+        res = session.post(
             url,
             headers=headers,
             cookies=cookies,
             json=payload,
-            proxies=proxies,
             timeout=15
         )
         return res.status_code, res.text
@@ -65,7 +72,7 @@ def canva_webhook():
             "status_code": code,
             "success": (code == 200 and "<!doctype html>" not in body.lower()),
             "email": test_em,
-            "response": body[:250]
+            "response": body[:300]
         })
 
     data = request.get_json(silent=True) or {}
@@ -88,4 +95,4 @@ def canva_webhook():
     if code == 200 and "<!doctype html>" not in body.lower():
         return jsonify({"status": "success", "message": f"تم إرسال الدعوة إلى {customer_email}"}), 200
     else:
-        return jsonify({"status": "failed", "status_code": code, "details": body[:200]}), 500
+        return jsonify({"status": "failed", "status_code": code, "details": body[:300]}), 500
