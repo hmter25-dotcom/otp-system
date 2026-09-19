@@ -6,69 +6,59 @@ import re
 canva_bp = Blueprint('canva_bp', __name__)
 
 def trigger_canva_invite(target_email):
-    url = "https://www.canva.com/_ajax/invitation/brand/invitations/create"
+    # استخدام مسار الدفعة المباشر
+    url = "https://www.canva.com/_ajax/ae/v2/createBatch"
     
     headers = {
-        'accept': '*/*',
+        'accept': 'application/json, text/plain, */*',
         'accept-language': 'ar,en-US;q=0.9,en;q=0.8',
-        'content-type': 'application/json;charset=UTF-8',
+        'content-type': 'application/json',
         'origin': 'https://www.canva.com',
-        'priority': 'u=1, i',
         'referer': 'https://www.canva.com/',
-        'sec-ch-ua': '"Google Chrome";v="153", "Not_A Brand";v="8", "Chromium";v="153"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-ch-ua-platform-version': '"13.0.0"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
-        'x-canva-accept-prefix': 'no-prefix',
-        'x-canva-active-user': 'eyJBIjoiVUFHeE1uYy1TeUEiLCJCIjoiQkFHeE1yQ2M0MmcifQ==',
-        'x-canva-app': 'home',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'x-canva-brand': 'BAGxMrCc42g',
-        'x-canva-locale': 'ar',
-        'x-canva-request': 'createbrandinvitations',
         'x-canva-user': 'UAGxMnc-SyA'
     }
 
-    # تجميع الكوكيز وتمريرها في الجلسة
-    p1 = "CDI=f8ce3876-2448-47a8-9f7e-77a530665831; "
-    p2 = "CB=BAGxMrCc42g; "
-    p3 = "CAU=eyJBIjoiVUFHeE1uYy1TeUEiLCJCIjoiQkFHeE1yQ2M0MmcifQ==; "
-    p4 = "CID=cnvanZW4eAAAAA9BkFtdArDvNTyRFeoMSEyTIK1azm4op5CehysNBUKa_vcRH7cR96mQKyaoow4rWWSawljNc8MRwqh3r146qg5QHjkLnbSqdsVF25npNLwzz8gRKzkzIwYD-7TQ03ce31d9; "
-    p5 = "CUI=ZW4eAAAAA0roaKLUxFu3UINXQv6_hmbDQvBb0GX1UaHIqmz6nM8Fe2Cvij9LxxbYkE3uAM7nQyrAE6en6kKkMfM; "
-    p6 = "CS=1"
-    
+    raw_cookies = (
+        "CDI=f8ce3876-2448-47a8-9f7e-77a530665831; "
+        "CB=BAGxMrCc42g; "
+        "CAU=eyJBIjoiVUFHeE1uYy1TeUEiLCJCIjoiQkFHeE1yQ2M0MmcifQ==; "
+        "CID=cnvanZW4eAAAAA9BkFtdArDvNTyRFeoMSEyTIK1azm4op5CehysNBUKa_vcRH7cR96mQKyaoow4rWWSawljNc8MRwqh3r146qg5QHjkLnbSqdsVF25npNLwzz8gRKzkzIwYD-7TQ03ce31d9; "
+        "CUI=ZW4eAAAAA0roaKLUxFu3UINXQv6_hmbDQvBb0GX1UaHIqmz6nM8Fe2Cvij9LxxbYkE3uAM7nQyrAE6en6kKkMfM; "
+        "CS=1"
+    )
+
     session = requests.Session()
     session.headers.update(headers)
-    session.headers['cookie'] = p1 + p2 + p3 + p4 + p5 + p6
+    session.headers['cookie'] = raw_cookies
 
     payload = {
-        "K": "BAGxMrCc42g",
-        "A?": "A",
-        "A": [{"A": target_email, "B": "B"}],
-        "B": True
+        "brandId": "BAGxMrCc42g",
+        "invitations": [
+            {
+                "email": target_email,
+                "role": "MEMBER"
+            }
+        ]
     }
 
     try:
-        res = session.post(url, json=payload, timeout=12)
-        # التحقق من أن الاستجابة ليست صفحة فحص HTML
-        is_success = (res.status_code == 200) and ("<!DOCTYPE html>" not in res.text)
-        return is_success, res.text
+        res = session.post(url, json=payload, timeout=10)
+        return res.status_code, res.text
     except Exception as e:
-        return False, str(e)
+        return 500, str(e)
 
-# مسار الـ Webhook الخاص بكانفا
 @canva_bp.route('/webhook/canva', methods=['POST', 'GET'])
 def canva_webhook():
     test_em = request.args.get('email')
     if test_em:
-        success, info = trigger_canva_invite(test_em.strip())
+        code, info = trigger_canva_invite(test_em.strip())
         return jsonify({
-            "status": "success" if success else "failed",
+            "status_code": code,
+            "success": code in [200, 204],
             "email": test_em,
-            "response": info
+            "response": info[:250]
         })
 
     data = request.get_json(silent=True) or {}
@@ -87,8 +77,8 @@ def canva_webhook():
     if not customer_email:
         return jsonify({"status": "error", "message": "لم يتم العثور على بريد العميل في الطلب"}), 400
 
-    success, info = trigger_canva_invite(customer_email)
-    if success:
-        return jsonify({"status": "success", "message": f"تم إرسال دعوة كانفا للعميل: {customer_email}"}), 200
+    code, info = trigger_canva_invite(customer_email)
+    if code in [200, 204]:
+        return jsonify({"status": "success", "message": f"تم إرسال الدعوة إلى {customer_email}"}), 200
     else:
-        return jsonify({"status": "failed", "message": "فشل إرسال الدعوة", "details": info}), 500
+        return jsonify({"status": "failed", "status_code": code, "details": info[:200]}), 500
