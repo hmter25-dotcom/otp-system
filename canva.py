@@ -1,22 +1,22 @@
 from flask import Blueprint, request, jsonify
-from curl_cffi import requests
+import requests
 import json
 import re
 
 canva_bp = Blueprint('canva_bp', __name__)
 
-# بيانات البروكسي الخاص بك من Webshare
 PROXY_URL = "http://frngkmd:jhs8jlchdmdy@31.59.20.176:6754"
 
 def trigger_canva_invite(target_email):
     url = "https://www.canva.com/_ajax/invitation/brand/invitations/create"
     
     headers = {
-        'accept': '*/*',
-        'accept-language': 'ar,en-US;q=0.9,en;q=0.8',
-        'content-type': 'application/json;charset=UTF-8',
-        'origin': 'https://www.canva.com',
-        'referer': 'https://www.canva.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'ar,en;q=0.9',
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Origin': 'https://www.canva.com',
+        'Referer': 'https://www.canva.com/',
         'x-canva-brand': 'BAGxMrCc42g',
         'x-canva-user': 'UAGxMnc-SyA',
         'x-canva-request': 'createbrandinvitations'
@@ -50,7 +50,6 @@ def trigger_canva_invite(target_email):
             cookies=cookies,
             json=payload,
             proxies=proxies,
-            impersonate="chrome120",
             timeout=15
         )
         return res.status_code, res.text
