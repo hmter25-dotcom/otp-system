@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أداة المصادقة الثنائية (2FA) | مجموعة متاجرنا</title>
-    <!-- مكتبة التشفير الأساسية (مهمة لعمليات 2FA) -->
+    <!-- مكتبة التشفير الأساسية -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -37,7 +37,7 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        /* --- قسم الشعارات الجديد --- */
+        /* --- قسم الشعارات --- */
         .brands-container {
             display: flex;
             justify-content: center;
@@ -69,8 +69,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        /* -------------------------- */
 
         .header {
             text-align: center;
@@ -288,7 +286,6 @@
         <!-- قسم الشعارات -->
         <div class="brands-container">
             <div class="brand-item">
-                <!-- استخدام ../ لسحب الصورة من الملف الرئيسي -->
                 <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
                 <span class="brand-name">إليفارا</span>
             </div>
@@ -345,15 +342,28 @@
         let totpInterval;
         let currentCode = "";
 
+        // دالة تنظيف متقدمة تحذف محارف الواتساب المخفية وأي رموز زائدة
+        function cleanSecret(str) {
+            if (!str) return "";
+            let text = str.trim();
+            if (text.toLowerCase().includes("secret=")) {
+                let m = text.match(/secret=([a-zA-Z2-7]+)/i);
+                if (m) text = m[1];
+            }
+            // حذف كل شيء ما عدا الحروف والأرقام المعتمدة (A-Z و 2-7)
+            return text.replace(/[^A-Za-z2-7]/g, '').toUpperCase();
+        }
+
         function base32tohex(base32) {
             const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
             let bits = "";
             let hex = "";
             
-            base32 = base32.replace(/\s+/g, '').toUpperCase();
+            const clean = cleanSecret(base32);
+            if (!clean || clean.length < 8) throw new Error("Invalid base32");
             
-            for (let i = 0; i < base32.length; i++) {
-                let val = base32chars.indexOf(base32.charAt(i));
+            for (let i = 0; i < clean.length; i++) {
+                let val = base32chars.indexOf(clean.charAt(i));
                 if (val === -1) throw new Error("Invalid base32");
                 bits += val.toString(2).padStart(5, '0');
             }
@@ -368,7 +378,7 @@
             try {
                 const keyHex = base32tohex(secret);
                 const key = CryptoJS.enc.Hex.parse(keyHex);
-                const epoch = Math.round(new Date().getTime() / 1000.0);
+                const epoch = Math.floor(Date.now() / 1000);
                 const time = Math.floor(epoch / 30);
                 const timeHex = time.toString(16).padStart(16, '0');
                 const timeBytes = CryptoJS.enc.Hex.parse(timeHex);
@@ -377,18 +387,20 @@
                 const hmacHex = hmac.toString(CryptoJS.enc.Hex);
                 
                 const offset = parseInt(hmacHex.substring(hmacHex.length - 1), 16);
-                let otp = (parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) + "";
-                return otp.substr(otp.length - 6, 6).padStart(6, '0');
+                const otp = ((parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) % 1000000);
+                return otp.toString().padStart(6, '0');
             } catch (e) {
                 return null;
             }
         }
 
         function startTotp() {
-            const secret = document.getElementById('secretKey').value;
+            const rawSecret = document.getElementById('secretKey').value;
             const errorMsg = document.getElementById('errorMsg');
             const resultArea = document.getElementById('resultArea');
             
+            const secret = cleanSecret(rawSecret);
+
             if (!secret) {
                 errorMsg.style.display = 'block';
                 errorMsg.textContent = 'الرجاء إدخال المفتاح أولاً!';
@@ -415,7 +427,8 @@
 
         function updateDisplay(secret) {
             const code = getTOTP(secret);
-            const epoch = Math.round(new Date().getTime() / 1000.0);
+            if (!code) return;
+            const epoch = Math.floor(Date.now() / 1000);
             const remaining = 30 - (epoch % 30);
             
             currentCode = code;
@@ -450,6 +463,10 @@
                 }, 2000);
             });
         }
+
+        document.getElementById('secretKey').addEventListener('input', function() {
+            document.getElementById('errorMsg').style.display = 'none';
+        });
     </script>
 </body>
 </html>
