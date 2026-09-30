@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <!-- حقوق الملكية الفكرية البرمجية -->
+    <meta name="author" content="حنيف بن قحطان">
+    <meta name="copyright" content="مجموعة متاجرنا (إليفارا، بوكس أب، بيكسل بلس، عقيد) - مكة المكرمة">
     <title>أداة المصادقة الثنائية (2FA) | مجموعة متاجرنا</title>
-    <!-- مكتبة التشفير الأساسية المعتمدة -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
@@ -92,34 +94,6 @@
             line-height: 1.6;
         }
 
-        /* حالة مزامنة الوقت الذكية */
-        .time-sync-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 10px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(16, 185, 129, 0.1);
-            color: #34d399;
-            border: 1px solid rgba(52, 211, 153, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .time-sync-status.syncing {
-            background: rgba(245, 158, 11, 0.1);
-            color: #fbbf24;
-            border-color: rgba(251, 191, 36, 0.2);
-        }
-
-        .time-sync-status.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            border-color: rgba(248, 113, 113, 0.2);
-        }
-
         .input-group {
             margin-bottom: 20px;
         }
@@ -174,7 +148,7 @@
         }
 
         .result-area {
-            display: none; 
+            display: none;
             background: rgba(15, 23, 42, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -196,29 +170,7 @@
             margin-bottom: 15px;
             text-shadow: 0 0 25px rgba(255,255,255,0.2);
             font-family: monospace;
-        }
-
-        .timer-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .time-text {
-            color: #94a3b8;
-            font-size: 15px;
-        }
-
-        .time-badge {
-            background: #334155;
-            color: #38bdf8;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 14px;
-            min-width: 80px;
+            direction: ltr;
         }
 
         .progress-bar {
@@ -258,7 +210,7 @@
             background: #1d4ed8;
             transform: translateY(-1px);
         }
-        
+
         .btn-copy.success {
             background: #10b981 !important;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
@@ -275,6 +227,13 @@
             color: #94a3b8;
             margin-bottom: 10px;
             display: block;
+        }
+
+        .alt-codes-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .alt-code-btn {
@@ -297,6 +256,11 @@
             background: #1e293b;
         }
 
+        .alt-code-btn.success {
+            border-color: #10b981;
+            color: #34d399;
+        }
+
         .error-msg {
             color: #ef4444;
             font-size: 14px;
@@ -308,7 +272,6 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
-        /* --- قسم الدعم الفني --- */
         .support-section {
             text-align: center;
             padding-top: 25px;
@@ -351,12 +314,32 @@
             box-shadow: 0 12px 30px rgba(34, 158, 217, 0.6);
             background: #2bb3f3;
         }
+
+        .copyright {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            color: #64748b;
+            font-size: 13px;
+            line-height: 2;
+        }
+
+        .copyright strong {
+            color: #cbd5e1;
+            font-weight: 700;
+        }
+        
+        .copyright .owner-name {
+            color: #38bdf8;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        
+
         <!-- الشعارات -->
         <div class="brands-container">
             <div class="brand-item">
@@ -371,30 +354,22 @@
 
         <div class="header">
             <h1>بوابة المصادقة الثنائية (2FA)</h1>
-            <p>بوابة آمنة وموثوقة لاستخراج رموز التحقق الخاصة بحساباتك الرقمية في ثوانٍ معدودة.</p>
-            <div class="time-sync-status syncing" id="timeSyncStatus">
-                <span>⏳</span> جاري مزامنة الوقت مع السيرفر العالمي...
-            </div>
+            <p>بوابة آمنة وموثوقة لاستخراج رمز التحقق الخاص بحسابك بسهولة وسرعة.</p>
         </div>
 
         <div class="input-group">
             <label class="input-label">أدخل المفتاح السري (Secret Key):</label>
-            <input type="text" id="secretKey" class="secret-input" placeholder="مثال: J7O7TSRNL5MXBL..." autocomplete="off">
+            <input type="text" id="secretKey" class="secret-input" placeholder="مثال: J7O7TSRNL5MXBL..." autocomplete="off" autocapitalize="off" spellcheck="false">
             <div id="errorMsg" class="error-msg">المفتاح غير صحيح، يرجى التأكد من النسخ الصحيح.</div>
         </div>
 
-        <button class="btn-generate" onclick="startTotp()">استخراج الرمز الآن 🚀</button>
+        <button class="btn-generate" id="generateBtn">استخراج الرمز</button>
 
         <div class="result-area" id="resultArea">
             <div class="code-display" id="totpCode">------</div>
-            
+
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
-            </div>
-
-            <div class="timer-container">
-                <span class="time-text">ينتهي الرمز خلال:</span>
-                <span class="time-badge"><span id="timeRemaining">30</span> ثانية</span>
             </div>
 
             <button class="btn-copy" id="copyBtn" onclick="copyCode(currentCode, 'copyBtn', 'copyText')">
@@ -402,12 +377,17 @@
                 <span id="copyText">نسخ الرمز المباشر</span>
             </button>
 
-            <!-- الكود الاحتياطي السابق لمعالجة تأخير السيرفرات -->
+            <!-- أكواد بديلة لمعالجة فارق الوقت بين الأجهزة والسيرفرات -->
             <div class="alt-codes-box">
-                <span class="alt-codes-title">إذا رفض الموقع الرمز، انسخ الكود البديل (السابق):</span>
-                <button class="alt-code-btn" id="altCopyBtn" onclick="copyCode(prevCode, 'altCopyBtn', 'altCopyText')">
-                    <span id="altCopyText">نسخ الكود البديل: <span id="prevCodeDisplay">------</span> 📋</span>
-                </button>
+                <span class="alt-codes-title">إذا لم يُقبل الرمز، جرّب أحد الرمزين البديلين:</span>
+                <div class="alt-codes-row">
+                    <button class="alt-code-btn" id="altCopyBtn" onclick="copyCode(prevCode, 'altCopyBtn', 'altCopyText')">
+                        <span id="altCopyText">الرمز البديل 1: <span id="prevCodeDisplay">------</span></span>
+                    </button>
+                    <button class="alt-code-btn" id="nextCopyBtn" onclick="copyCode(nextCode, 'nextCopyBtn', 'nextCopyText')">
+                        <span id="nextCopyText">الرمز البديل 2: <span id="nextCodeDisplay">------</span></span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -417,201 +397,348 @@
             <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
             <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn-support">
                 <span>@elevaraa</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </a>
+        </div>
+
+        <!-- الحقوق الفكرية -->
+        <div class="copyright">
+            &copy; <span id="copyYear">2026</span> <strong>مجموعة متاجرنا (إليفارا، بوكس أب، بيكسل بلس، عقيد)</strong><br>
+            تطوير وإدارة: <span class="owner-name">حنيف بن قحطان</span> | مكة المكرمة<br>
+            جميع الحقوق محفوظة
         </div>
 
     </div>
 
     <script>
-        // --- 1. النظام الذكي لمزامنة التوقيت ---
-        let serverTimeOffset = 0; 
-        let totpInterval;
-        let currentCode = "";
-        let prevCode = "";
-        let hexSecret = "";
+    // =====================================================
+    // 1) SHA-1 و HMAC-SHA1 بدون أي مكتبة خارجية (لا يعتمد على CDN)
+    // =====================================================
+    function sha1Bytes(msg) {
+        const ml = msg.length;
+        const total = ((ml + 9 + 63) >> 6) << 6;
+        const buf = new Uint8Array(total);
+        buf.set(msg);
+        buf[ml] = 0x80;
+        const dv = new DataView(buf.buffer);
+        dv.setUint32(total - 8, Math.floor((ml * 8) / 0x100000000));
+        dv.setUint32(total - 4, (ml * 8) >>> 0);
 
-        async function syncNetworkTime() {
-            const statusEl = document.getElementById('timeSyncStatus');
-            try {
-                const start = Date.now();
-                // جلب الوقت الذري الموحد لتفادي انحراف ساعة العميل
-                const res = await fetch("https://worldtimeapi.org/api/timezone/Etc/UTC", { cache: "no-store" });
-                if (res.ok) {
-                    const data = await res.json();
-                    const networkTime = new Date(data.utc_datetime).getTime();
-                    const latency = Math.floor((Date.now() - start) / 2);
-                    serverTimeOffset = (networkTime + latency) - Date.now();
-                    
-                    statusEl.className = "time-sync-status";
-                    statusEl.innerHTML = "<span>✓</span> متصل بالتوقيت الذري العالمي بدقة عالية";
-                } else {
-                    throw new Error("API Limit");
-                }
-            } catch (e) {
-                // وضع احتياطي في حال حجب الـ API
-                statusEl.className = "time-sync-status error";
-                statusEl.innerHTML = "<span>⚠</span> يعمل بالتوقيت المحلي (تأكد من دقة ساعة جهازك)";
+        let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+        const w = new Uint32Array(80);
+
+        for (let i = 0; i < total; i += 64) {
+            for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
+            for (let t = 16; t < 80; t++) {
+                const x = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
+                w[t] = (x << 1) | (x >>> 31);
             }
+            let a = h0, b = h1, c = h2, d = h3, e = h4;
+            for (let t = 0; t < 80; t++) {
+                let f, k;
+                if (t < 20)      { f = (b & c) | (~b & d);          k = 0x5A827999; }
+                else if (t < 40) { f = b ^ c ^ d;                   k = 0x6ED9EBA1; }
+                else if (t < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+                else             { f = b ^ c ^ d;                   k = 0xCA62C1D6; }
+                const temp = (((a << 5) | (a >>> 27)) + f + e + k + w[t]) >>> 0;
+                e = d; d = c; c = ((b << 30) | (b >>> 2)) >>> 0; b = a; a = temp;
+            }
+            h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0;
+            h3 = (h3 + d) >>> 0; h4 = (h4 + e) >>> 0;
         }
-        
-        // تشغيل المزامنة فور فتح الصفحة
-        syncNetworkTime();
+        const out = new Uint8Array(20);
+        const odv = new DataView(out.buffer);
+        [h0, h1, h2, h3, h4].forEach((v, i) => odv.setUint32(i * 4, v));
+        return out;
+    }
 
-        // حساب الوقت الفعلي المدمج مع الفارق الزمني (بالثواني)
-        function getCorrectedEpoch() {
-            return Math.floor((Date.now() + serverTimeOffset) / 1000);
+    function hmacSha1(key, msg) {
+        const block = 64;
+        if (key.length > block) key = sha1Bytes(key);
+        const k = new Uint8Array(block);
+        k.set(key);
+        const inner = new Uint8Array(block + msg.length);
+        const outer = new Uint8Array(block + 20);
+        for (let i = 0; i < block; i++) {
+            inner[i] = k[i] ^ 0x36;
+            outer[i] = k[i] ^ 0x5c;
         }
+        inner.set(msg, block);
+        outer.set(sha1Bytes(inner), block);
+        return sha1Bytes(outer);
+    }
 
-        // --- 2. التنظيف الذكي للمفتاح ---
-        function cleanSecret(str) {
-            if (!str) return "";
-            let text = str.trim();
-            // استخراج المفتاح إذا قام العميل بنسخ رابط otpauth كامل
-            if (text.toLowerCase().includes("secret=")) {
-                let m = text.match(/secret=([a-zA-Z2-7]+)/i);
-                if (m) text = m[1];
+    async function hmac(algo, key, msg) {
+        if (algo === 'SHA1') return hmacSha1(key, msg);
+        if (!(window.crypto && crypto.subtle)) throw new Error('no-subtle');
+        const name = algo === 'SHA256' ? 'SHA-256' : 'SHA-512';
+        const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: { name } }, false, ['sign']);
+        return new Uint8Array(await crypto.subtle.sign('HMAC', k, msg));
+    }
+
+    // =====================================================
+    // 2) تحليل وتنظيف المفتاح (يدعم رابط otpauth كامل)
+    // =====================================================
+    function parseSecretInput(raw) {
+        let text = (raw || '').trim();
+        const opts = { algo: 'SHA1', digits: 6, period: 30 };
+
+        // تحويل الأرقام العربية/الفارسية إلى لاتينية
+        text = text
+            .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+            .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0));
+
+        if (/secret=/i.test(text)) {
+            const get = name => {
+                const m = text.match(new RegExp('[?&]' + name + '=([^&#\\s]+)', 'i'));
+                return m ? decodeURIComponent(m[1]) : null;
+            };
+            const s = get('secret');
+            if (s) text = s;
+            const a = get('algorithm');
+            if (a) {
+                const up = a.toUpperCase().replace('-', '');
+                if (['SHA1', 'SHA256', 'SHA512'].includes(up)) opts.algo = up;
             }
-            // إزالة المسافات وحذف أي محارف خارج نطاق Base32
-            return text.replace(/[^A-Za-z2-7]/g, '').toUpperCase();
-        }
-
-        // --- 3. تحويل Base32 إلى Hex وفق المعيار القياسي الدقيق (حل مشكلة التشفير) ---
-        function base32ToHexStrict(base32) {
-            const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-            let bits = "";
-            let hex = "";
-            
-            for (let i = 0; i < base32.length; i++) {
-                let val = base32chars.indexOf(base32.charAt(i));
-                if (val !== -1) {
-                    bits += val.toString(2).padStart(5, '0');
-                }
-            }
-            
-            // تقسيم البتات إلى بايتات كاملة (8 بت = 2 أحرف Hex) لتوافق خوارزمية HMAC
-            for (let i = 0; i + 8 <= bits.length; i += 8) {
-                let chunk = bits.substr(i, 8);
-                hex += parseInt(chunk, 2).toString(16).padStart(2, '0');
-            }
-            return hex;
-        }
-
-        // --- 4. خوارزمية توليد الرمز TOTP (RFC 6238) ---
-        function generateTOTPFromHex(secretHex, epochSeconds) {
-            try {
-                const timeStep = Math.floor(epochSeconds / 30);
-                const timeHex = timeStep.toString(16).padStart(16, '0');
-                
-                const key = CryptoJS.enc.Hex.parse(secretHex);
-                const message = CryptoJS.enc.Hex.parse(timeHex);
-                
-                const hmac = CryptoJS.HmacSHA1(message, key);
-                const hmacHex = hmac.toString(CryptoJS.enc.Hex);
-                
-                const offset = parseInt(hmacHex.substring(hmacHex.length - 1), 16);
-                const otp = ((parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) % 1000000);
-                
-                return otp.toString().padStart(6, '0');
-            } catch (e) {
-                return null;
-            }
-        }
-
-        // --- 5. التحكم بالواجهة والتحديث اللحظي ---
-        function startTotp() {
-            const rawSecret = document.getElementById('secretKey').value;
-            const errorMsg = document.getElementById('errorMsg');
-            const resultArea = document.getElementById('resultArea');
-            
-            const secret = cleanSecret(rawSecret);
-
-            if (!secret || secret.length < 8) {
-                errorMsg.style.display = 'block';
-                errorMsg.textContent = 'المفتاح غير صحيح أو قصير جداً، يرجى التأكد من النسخ الصحيح.';
-                resultArea.style.display = 'none';
-                if (totpInterval) clearInterval(totpInterval);
-                return;
-            }
-
-            try {
-                hexSecret = base32ToHexStrict(secret);
-                if (!hexSecret) throw new Error("Invalid");
-            } catch(e) {
-                errorMsg.style.display = 'block';
-                errorMsg.textContent = 'المفتاح يحتوي على رموز غير صالحة.';
-                resultArea.style.display = 'none';
-                return;
-            }
-
-            errorMsg.style.display = 'none';
-            resultArea.style.display = 'block';
-            
-            updateDisplay(); // التحديث الفوري
-            
-            if (totpInterval) clearInterval(totpInterval);
-            totpInterval = setInterval(updateDisplay, 1000);
+            const d = parseInt(get('digits'), 10);
+            if (d >= 6 && d <= 8) opts.digits = d;
+            const p = parseInt(get('period'), 10);
+            if (p >= 1 && p <= 300) opts.period = p;
         }
 
-        function updateDisplay() {
-            if (!hexSecret) return;
+        // إزالة المسافات والشرطات والمحارف المخفية وعلامة "="
+        text = text
+            .replace(/[\s\u00A0\u200B-\u200F\u202A-\u202E\u2060\uFEFF\-_=]/g, '')
+            .toUpperCase();
 
-            const epoch = getCorrectedEpoch();
-            
-            // توليد الكود الحالي والكود السابق
-            const codeNow = generateTOTPFromHex(hexSecret, epoch);
-            const codePrev = generateTOTPFromHex(hexSecret, epoch - 30);
+        const bad = text.match(/[^A-Z2-7]/g);
+        if (bad) return { error: 'المفتاح يحتوي على رموز غير صالحة: ' + [...new Set(bad)].join(' ') + ' — تأكد من النسخ الصحيح (المفتاح يتكون من حروف A-Z وأرقام 2-7 فقط).' };
+        if (text.length < 8) return { error: 'المفتاح قصير جداً، يرجى التأكد من النسخ الصحيح.' };
 
-            if (!codeNow) return;
+        return { secret: text, ...opts };
+    }
 
-            currentCode = codeNow;
-            prevCode = codePrev;
-
-            const remaining = 30 - (epoch % 30);
-            
-            document.getElementById('totpCode').textContent = codeNow.match(/.{1,3}/g).join(' '); // إضافة مسافة للجمالية (مثال: 123 456)
-            document.getElementById('prevCodeDisplay').textContent = codePrev;
-            document.getElementById('timeRemaining').textContent = remaining;
-            
-            // تحديث شريط التقدم اللوني
-            const progressFill = document.getElementById('progressFill');
-            const percentage = (remaining / 30) * 100;
-            progressFill.style.width = percentage + '%';
-            
-            if (remaining <= 5) {
-                progressFill.style.backgroundColor = '#ef4444'; // أحمر خطر
-            } else if (remaining <= 10) {
-                progressFill.style.backgroundColor = '#f59e0b'; // برتقالي تحذير
-            } else {
-                progressFill.style.backgroundColor = '#38bdf8'; // أزرق طبيعي
+    function base32ToBytes(b32) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        let bits = 0, value = 0;
+        const out = [];
+        for (const ch of b32) {
+            value = (value << 5) | chars.indexOf(ch);
+            bits += 5;
+            if (bits >= 8) {
+                out.push((value >>> (bits - 8)) & 0xff);
+                bits -= 8;
             }
         }
+        return new Uint8Array(out);
+    }
 
-        // --- 6. دالة النسخ الاحترافية للزرين ---
-        function copyCode(code, btnId, textId) {
-            if (!code) return;
-            // نسخ الكود بدون المسافات الجمالية
-            const cleanCodeToCopy = code.replace(/\s/g, ''); 
-            
-            navigator.clipboard.writeText(cleanCodeToCopy).then(() => {
-                const btn = document.getElementById(btnId);
-                const textEl = document.getElementById(textId);
-                const originalText = textEl.innerHTML;
-                
-                btn.classList.add('success');
-                textEl.textContent = 'تم النسخ بنجاح! ✓';
-                
-                setTimeout(() => {
-                    btn.classList.remove('success');
-                    textEl.innerHTML = originalText;
-                }, 2000);
-            });
-        }
+    // =====================================================
+    // 3) خوارزمية TOTP (RFC 6238 / RFC 4226)
+    // =====================================================
+    async function totpForCounter(keyBytes, counter, algo, digits) {
+        const msg = new Uint8Array(8);
+        const dv = new DataView(msg.buffer);
+        dv.setUint32(0, Math.floor(counter / 0x100000000));
+        dv.setUint32(4, counter >>> 0);
+        const h = await hmac(algo, keyBytes, msg);
+        const o = h[h.length - 1] & 0x0f;
+        const bin = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
+        return String(bin % Math.pow(10, digits)).padStart(digits, '0');
+    }
 
-        // إخفاء رسالة الخطأ فور بدء الكتابة مجدداً
-        document.getElementById('secretKey').addEventListener('input', function() {
-            document.getElementById('errorMsg').style.display = 'none';
+    // =====================================================
+    // 4) مزامنة الوقت من عدة مصادر (وليس مصدر واحد)
+    // =====================================================
+    let serverTimeOffset = 0;
+    let syncPromise = null;
+
+    async function timedFetch(url, ms = 4000) {
+        const c = new AbortController();
+        const t = setTimeout(() => c.abort(), ms);
+        try { return await fetch(url, { cache: 'no-store', signal: c.signal }); }
+        finally { clearTimeout(t); }
+    }
+
+    function parseIso(s) {
+        s = String(s).replace(/(\.\d{3})\d+/, '$1');
+        if (!/(Z|[+-]\d{2}:?\d{2})$/.test(s)) s += 'Z';
+        const t = Date.parse(s);
+        if (isNaN(t)) throw new Error('bad-date');
+        return t;
+    }
+
+    // يرجع الفارق (بالميلي ثانية) بين وقت السيرفر ووقت الجهاز
+    async function measureOffset(getServerMs) {
+        const t0 = Date.now();
+        const serverMs = await getServerMs();
+        const t1 = Date.now();
+        return serverMs - (t0 + t1) / 2;
+    }
+
+    const apiSources = [
+        () => measureOffset(async () => {
+            const r = await timedFetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+            if (!r.ok) throw new Error('http');
+            const d = await r.json();
+            return d.utc_datetime ? parseIso(d.utc_datetime) : d.unixtime * 1000 + 500;
+        }),
+        () => measureOffset(async () => {
+            const r = await timedFetch('https://timeapi.io/api/time/current/zone?timeZone=UTC');
+            if (!r.ok) throw new Error('http');
+            const d = await r.json();
+            return parseIso(d.dateTime);
+        }),
+        () => measureOffset(async () => {
+            const r = await timedFetch('https://www.cloudflare.com/cdn-cgi/trace');
+            if (!r.ok) throw new Error('http');
+            const m = (await r.text()).match(/ts=([\d.]+)/);
+            if (!m) throw new Error('no-ts');
+            return parseFloat(m[1]) * 1000;
+        })
+    ];
+
+    // احتياطي: ترويسة Date من نفس موقعك (تعمل دائماً عند الاستضافة على http/https)
+    function ownServerSource() {
+        if (!/^https?:$/.test(location.protocol)) return Promise.reject(new Error('no-http'));
+        return measureOffset(async () => {
+            const r = await timedFetch(location.pathname + '?t=' + Date.now());
+            const d = r.headers.get('Date');
+            if (!d) throw new Error('no-date');
+            return Date.parse(d) + 500;
         });
+    }
+
+    async function syncNetworkTime() {
+        let offset = null;
+        try { offset = await Promise.any(apiSources.map(f => f())); }
+        catch (e) {
+            try { offset = await ownServerSource(); } catch (e2) { offset = null; }
+        }
+        if (offset !== null && isFinite(offset)) serverTimeOffset = offset;
+    }
+
+    function getCorrectedMs() { return Date.now() + serverTimeOffset; }
+
+    function startSync() { syncPromise = syncNetworkTime(); return syncPromise; }
+    startSync();
+    setInterval(startSync, 5 * 60 * 1000);
+
+    // =====================================================
+    // 5) الواجهة والتحديث اللحظي
+    // =====================================================
+    let totpInterval = null;
+    let currentCode = "", prevCode = "", nextCode = "";
+    let cfg = null, keyBytes = null, lastCounter = null, busy = false;
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+        if (totpInterval) clearInterval(totpInterval);
+        totpInterval = null;
+    }
+
+    async function startTotp() {
+        const parsed = parseSecretInput(document.getElementById('secretKey').value);
+        if (parsed.error) { showError(parsed.error); return; }
+
+        cfg = parsed;
+        keyBytes = base32ToBytes(parsed.secret);
+        lastCounter = null;
+
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+
+        // ننتظر اكتمال مزامنة الوقت (بحد أقصى 5 ثوانٍ) قبل أول توليد
+        await Promise.race([syncPromise, new Promise(r => setTimeout(r, 5000))]);
+
+        try { await updateDisplay(); }
+        catch (e) { showError('تعذر توليد الرمز على هذا المتصفح، جرّب متصفحاً آخر.'); return; }
+
+        if (totpInterval) clearInterval(totpInterval);
+        totpInterval = setInterval(updateDisplay, 250);
+    }
+
+    async function updateDisplay() {
+        if (!cfg || busy) return;
+        busy = true;
+        try {
+            const epoch = Math.floor(getCorrectedMs() / 1000);
+            const counter = Math.floor(epoch / cfg.period);
+
+            if (counter !== lastCounter) {
+                const [c, p, n] = await Promise.all([
+                    totpForCounter(keyBytes, counter, cfg.algo, cfg.digits),
+                    totpForCounter(keyBytes, counter - 1, cfg.algo, cfg.digits),
+                    totpForCounter(keyBytes, counter + 1, cfg.algo, cfg.digits)
+                ]);
+                currentCode = c; prevCode = p; nextCode = n;
+                lastCounter = counter;
+
+                const group = cfg.digits === 8 ? 4 : 3;
+                document.getElementById('totpCode').textContent = c.match(new RegExp('.{1,' + group + '}', 'g')).join(' ');
+                document.getElementById('prevCodeDisplay').textContent = p;
+                document.getElementById('nextCodeDisplay').textContent = n;
+            }
+
+            const remaining = cfg.period - (epoch % cfg.period);
+
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = ((remaining / cfg.period) * 100) + '%';
+            const warn = Math.min(10, cfg.period / 3), danger = Math.min(5, cfg.period / 6);
+            progressFill.style.backgroundColor =
+                remaining <= danger ? '#ef4444' : remaining <= warn ? '#f59e0b' : '#38bdf8';
+        } finally {
+            busy = false;
+        }
+    }
+
+    // =====================================================
+    // 6) النسخ (مع حل بديل للمتصفحات التي تمنع clipboard)
+    // =====================================================
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+
+    function copyCode(code, btnId, textId) {
+        if (!code) return;
+        const clean = code.replace(/\s/g, '');
+
+        const done = () => {
+            const btn = document.getElementById(btnId);
+            const textEl = document.getElementById(textId);
+            const original = textEl.innerHTML;
+            btn.classList.add('success');
+            textEl.textContent = 'تم النسخ بنجاح';
+            setTimeout(() => {
+                btn.classList.remove('success');
+                textEl.innerHTML = original;
+            }, 2000);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(clean).then(done).catch(() => { fallbackCopy(clean); done(); });
+        } else {
+            fallbackCopy(clean);
+            done();
+        }
+    }
+
+    document.getElementById('copyYear').textContent = new Date().getFullYear();
+    document.getElementById('generateBtn').addEventListener('click', startTotp);
+    document.getElementById('secretKey').addEventListener('keydown', e => { if (e.key === 'Enter') startTotp(); });
+    document.getElementById('secretKey').addEventListener('input', function () {
+        document.getElementById('errorMsg').style.display = 'none';
+    });
     </script>
 </body>
 </html>
