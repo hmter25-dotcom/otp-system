@@ -1,744 +1,328 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <!-- حقوق الملكية الفكرية البرمجية -->
-    <meta name="author" content="حنيف بن قحطان">
-    <meta name="copyright" content="مجموعة متاجرنا (إليفارا، بوكس أب، بيكسل بلس، عقيد) - مكة المكرمة">
-    <title>أداة المصادقة الثنائية (2FA) | مجموعة متاجرنا</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .brands-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 25px;
-            margin-bottom: 25px;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
-            padding-bottom: 25px;
-        }
-
-        .brand-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .brand-logo {
-            height: 60px;
-            object-fit: contain;
-            border-radius: 12px;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
-            background: #fff;
-        }
-
-        .brand-name {
-            font-size: 15px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff, #38bdf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-        }
-
-        .header p {
-            color: #94a3b8;
-            font-size: 14.5px;
-            line-height: 1.6;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-label {
-            display: block;
-            color: #e2e8f0;
-            margin-bottom: 10px;
-            font-weight: 600;
-            font-size: 15px;
-        }
-
-        .secret-input {
-            width: 100%;
-            background: #0f172a;
-            border: 2px solid #334155;
-            color: #fff;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s ease;
-            text-align: left;
-            direction: ltr;
-            letter-spacing: 1.5px;
-            font-family: monospace;
-        }
-
-        .secret-input:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-        }
-
-        .btn-generate {
-            width: 100%;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            border: none;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-            margin-bottom: 25px;
-        }
-
-        .btn-generate:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-        }
-
-        .result-area {
-            display: none;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .code-display {
-            font-size: 46px;
-            font-weight: 800;
-            letter-spacing: 12px;
-            color: #fff;
-            margin-bottom: 15px;
-            text-shadow: 0 0 25px rgba(255,255,255,0.2);
-            font-family: monospace;
-            direction: ltr;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #1e293b;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #38bdf8;
-            width: 100%;
-            transition: width 1s linear, background-color 0.3s ease;
-        }
-
-        .btn-copy {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .btn-copy:hover {
-            background: #1d4ed8;
-            transform: translateY(-1px);
-        }
-
-        .btn-copy.success {
-            background: #10b981 !important;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-        }
-
-        .alt-codes-box {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-        }
-
-        .alt-codes-title {
-            font-size: 12.5px;
-            color: #94a3b8;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .alt-codes-row {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .alt-code-btn {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: monospace;
-            font-weight: 600;
-            letter-spacing: 2px;
-        }
-
-        .alt-code-btn:hover {
-            border-color: #38bdf8;
-            color: #fff;
-            background: #1e293b;
-        }
-
-        .alt-code-btn.success {
-            border-color: #10b981;
-            color: #34d399;
-        }
-
-        .error-msg {
-            color: #ef4444;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .support-section {
-            text-align: center;
-            padding-top: 25px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-            margin-top: 25px;
-        }
-
-        .support-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
-
-        .support-subtitle {
-            font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 20px;
-        }
-
-        .telegram-btn-support {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #229ED9;
-            color: #ffffff;
-            text-decoration: none;
-            padding: 12px 36px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 700;
-            box-shadow: 0 8px 25px rgba(34, 158, 217, 0.4);
-            transition: all 0.3s ease;
-            direction: ltr;
-        }
-
-        .telegram-btn-support:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(34, 158, 217, 0.6);
-            background: #2bb3f3;
-        }
-
-        .copyright {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-            color: #64748b;
-            font-size: 13px;
-            line-height: 2;
-        }
-
-        .copyright strong {
-            color: #cbd5e1;
-            font-weight: 700;
-        }
-        
-        .copyright .owner-name {
-            color: #38bdf8;
-            font-weight: 800;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أداة المصادقة الثنائية (2FA) | مجموعة متاجرنا</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+body{background:linear-gradient(135deg,#0f172a 0%,#020617 100%);color:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.container{background:rgba(30,41,59,.6);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:40px 30px;width:100%;max-width:500px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.brands-container{display:flex;justify-content:center;align-items:center;gap:25px;margin-bottom:25px;border-bottom:1px dashed rgba(255,255,255,.08);padding-bottom:25px}
+.brand-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.brand-logo{height:60px;object-fit:contain;border-radius:12px;filter:drop-shadow(0 5px 15px rgba(0,0,0,.3));background:#fff}
+.brand-name{font-size:15px;font-weight:800;background:linear-gradient(135deg,#fff,#38bdf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.header{text-align:center;margin-bottom:30px}
+.header h1{font-size:24px;font-weight:800;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+.header p{color:#94a3b8;font-size:14.5px;line-height:1.6}
+.input-group{margin-bottom:20px;position:relative}
+.input-label{display:block;color:#e2e8f0;margin-bottom:10px;font-weight:600;font-size:15px}
+.secret-input{width:100%;background:#0f172a;border:2px solid #334155;color:#fff;padding:18px 16px;border-radius:14px;font-size:16px;outline:none;transition:all .3s ease;text-align:center;direction:ltr;letter-spacing:2px;font-family:monospace;font-weight:bold}
+.secret-input:focus{border-color:#38bdf8;box-shadow:0 0 15px rgba(56,189,248,.2)}
+.btn-generate{width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:16px;border-radius:14px;font-size:18px;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 8px 20px rgba(16,185,129,.3);margin-bottom:25px}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(16,185,129,.4)}
+.result-area{display:none;background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:30px 20px;text-align:center;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.code-display{font-size:clamp(34px,11vw,52px);font-weight:900;letter-spacing:6px;color:#fff;margin-bottom:20px;text-shadow:0 0 25px rgba(56,189,248,.4);font-family:monospace;direction:ltr;white-space:nowrap;user-select:all}
+.timer-container{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px}
+.time-text{color:#94a3b8;font-size:15px}
+.time-badge{background:#334155;color:#38bdf8;padding:4px 14px;border-radius:20px;font-weight:700;font-size:14px;min-width:80px}
+.progress-bar{width:100%;height:8px;background:#1e293b;border-radius:10px;overflow:hidden;margin-bottom:25px}
+.progress-fill{height:100%;background:#38bdf8;width:100%;transition:width 1s linear,background-color .3s ease}
+.progress-fill.no-anim{transition:none}
+.btn-copy{background:#2563eb;color:#fff;border:none;padding:16px 30px;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;transition:all .3s ease;display:inline-flex;align-items:center;gap:10px;width:100%;justify-content:center;box-shadow:0 8px 20px rgba(37,99,235,.3)}
+.btn-copy:hover{background:#1d4ed8;transform:translateY(-2px)}
+.btn-copy.success{background:#10b981!important;box-shadow:0 0 15px rgba(16,185,129,.4)}
+.error-msg{color:#ef4444;font-size:14px;margin-top:10px;display:none;background:rgba(239,68,68,.1);padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,.2);text-align:center}
+.sync-note{display:none;color:#f59e0b;font-size:12.5px;margin-top:14px;line-height:1.6}
+.support-section{text-align:center;padding-top:25px;border-top:1px dashed rgba(255,255,255,.1);margin-top:25px}
+.support-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
+.support-subtitle{font-size:14px;color:#94a3b8;margin-bottom:20px}
+.telegram-btn-support{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#229ED9;color:#fff;text-decoration:none;padding:12px 36px;border-radius:50px;font-size:16px;font-weight:700;box-shadow:0 8px 25px rgba(34,158,217,.4);transition:all .3s ease;direction:ltr}
+.telegram-btn-support:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(34,158,217,.6);background:#2bb3f3}
+</style>
 </head>
 <body>
+<div class="container">
 
-    <div class="container">
-
-        <!-- الشعارات -->
-        <div class="brands-container">
-            <div class="brand-item">
-                <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
-                <span class="brand-name">إليفارا</span>
-            </div>
-            <div class="brand-item">
-                <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" onerror="this.style.display='none'">
-                <span class="brand-name">بوكس أب</span>
-            </div>
-        </div>
-
-        <div class="header">
-            <h1>بوابة المصادقة الثنائية (2FA)</h1>
-            <p>بوابة آمنة وموثوقة لاستخراج رمز التحقق الخاص بحسابك بسهولة وسرعة.</p>
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">أدخل المفتاح السري (Secret Key):</label>
-            <input type="text" id="secretKey" class="secret-input" placeholder="مثال: J7O7TSRNL5MXBL..." autocomplete="off" autocapitalize="off" spellcheck="false">
-            <div id="errorMsg" class="error-msg">المفتاح غير صحيح، يرجى التأكد من النسخ الصحيح.</div>
-        </div>
-
-        <button class="btn-generate" id="generateBtn">استخراج الرمز</button>
-
-        <div class="result-area" id="resultArea">
-            <div class="code-display" id="totpCode">------</div>
-
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-
-            <button class="btn-copy" id="copyBtn" onclick="copyCode(currentCode, 'copyBtn', 'copyText')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <span id="copyText">نسخ الرمز المباشر</span>
-            </button>
-
-            <!-- أكواد بديلة لمعالجة فارق الوقت بين الأجهزة والسيرفرات -->
-            <div class="alt-codes-box">
-                <span class="alt-codes-title">إذا لم يُقبل الرمز، جرّب أحد الرمزين البديلين:</span>
-                <div class="alt-codes-row">
-                    <button class="alt-code-btn" id="altCopyBtn" onclick="copyCode(prevCode, 'altCopyBtn', 'altCopyText')">
-                        <span id="altCopyText">الرمز البديل 1: <span id="prevCodeDisplay">------</span></span>
-                    </button>
-                    <button class="alt-code-btn" id="nextCopyBtn" onclick="copyCode(nextCode, 'nextCopyBtn', 'nextCopyText')">
-                        <span id="nextCopyText">الرمز البديل 2: <span id="nextCodeDisplay">------</span></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- الدعم الفني -->
-        <div class="support-section">
-            <div class="support-title">لو احتجت لأي مساعدة؟</div>
-            <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
-            <a href="https://t.me/elevaraa" target="_blank" class="telegram-btn-support">
-                <span>@elevaraa</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </a>
-        </div>
-
-        <!-- الحقوق الفكرية -->
-        <div class="copyright">
-            &copy; <span id="copyYear">2026</span> <strong>مجموعة متاجرنا (إليفارا، بوكس أب، بيكسل بلس، عقيد)</strong><br>
-            تطوير وإدارة: <span class="owner-name">حنيف بن قحطان</span> | مكة المكرمة<br>
-            جميع الحقوق محفوظة
-        </div>
-
+  <div class="brands-container">
+    <div class="brand-item">
+      <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" onerror="this.style.display='none'">
+      <span class="brand-name">إليفارا</span>
     </div>
+    <div class="brand-item">
+      <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" onerror="this.style.display='none'">
+      <span class="brand-name">بوكس أب</span>
+    </div>
+  </div>
 
-    <script>
-    // =====================================================
-    // 1) SHA-1 و HMAC-SHA1 بدون أي مكتبة خارجية (لا يعتمد على CDN)
-    // =====================================================
-    function sha1Bytes(msg) {
-        const ml = msg.length;
-        const total = ((ml + 9 + 63) >> 6) << 6;
-        const buf = new Uint8Array(total);
-        buf.set(msg);
-        buf[ml] = 0x80;
-        const dv = new DataView(buf.buffer);
-        dv.setUint32(total - 8, Math.floor((ml * 8) / 0x100000000));
-        dv.setUint32(total - 4, (ml * 8) >>> 0);
+  <div class="header">
+    <h1>بوابة المصادقة الثنائية (2FA)</h1>
+    <p>بوابة آمنة وموثوقة لاستخراج رموز التحقق الخاصة بحساباتك الرقمية في ثوانٍ معدودة.</p>
+  </div>
 
-        let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
-        const w = new Uint32Array(80);
+  <div class="input-group">
+    <label class="input-label" for="secretKey">أدخل المفتاح السري (Secret Key):</label>
+    <input type="text" id="secretKey" class="secret-input" placeholder="الرمز هنا..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text">
+    <div id="errorMsg" class="error-msg"></div>
+  </div>
 
-        for (let i = 0; i < total; i += 64) {
-            for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
-            for (let t = 16; t < 80; t++) {
-                const x = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];
-                w[t] = (x << 1) | (x >>> 31);
-            }
-            let a = h0, b = h1, c = h2, d = h3, e = h4;
-            for (let t = 0; t < 80; t++) {
-                let f, k;
-                if (t < 20)      { f = (b & c) | (~b & d);          k = 0x5A827999; }
-                else if (t < 40) { f = b ^ c ^ d;                   k = 0x6ED9EBA1; }
-                else if (t < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
-                else             { f = b ^ c ^ d;                   k = 0xCA62C1D6; }
-                const temp = (((a << 5) | (a >>> 27)) + f + e + k + w[t]) >>> 0;
-                e = d; d = c; c = ((b << 30) | (b >>> 2)) >>> 0; b = a; a = temp;
-            }
-            h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0;
-            h3 = (h3 + d) >>> 0; h4 = (h4 + e) >>> 0;
-        }
-        const out = new Uint8Array(20);
-        const odv = new DataView(out.buffer);
-        [h0, h1, h2, h3, h4].forEach((v, i) => odv.setUint32(i * 4, v));
-        return out;
+  <button class="btn-generate" id="generateBtn">استخراج الرمز الآن 🚀</button>
+
+  <div class="result-area" id="resultArea">
+    <div class="code-display" id="totpCode">------</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="timer-container">
+      <span class="time-text">ينتهي الرمز خلال:</span>
+      <span class="time-badge"><span id="timeRemaining">30</span> ثانية</span>
+    </div>
+    <button class="btn-copy" id="copyBtn">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span id="copyText">نسخ الرمز المباشر</span>
+    </button>
+    <div class="sync-note" id="syncNote">تعذّرت مزامنة الوقت عبر الإنترنت، يتم استخدام وقت جهازك. تأكد أن الوقت والتاريخ في جهازك على "تلقائي".</div>
+  </div>
+
+  <div class="support-section">
+    <div class="support-title">لو احتجت لأي مساعدة؟</div>
+    <div class="support-subtitle">الرجاء التواصل مع فريق الدعم في تيلجرام</div>
+    <a href="https://t.me/elevaraa" target="_blank" rel="noopener" class="telegram-btn-support">
+      <span>@elevaraa</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+    </a>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ========== 1) SHA-1 / HMAC مدمج (يعمل بدون أي اعتماد خارجي) ========== */
+function sha1Bytes(msg) {
+  const ml = msg.length, total = ((ml + 9 + 63) >> 6) << 6;
+  const buf = new Uint8Array(total); buf.set(msg); buf[ml] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(total - 8, Math.floor((ml * 8) / 0x100000000));
+  dv.setUint32(total - 4, (ml * 8) >>> 0);
+  let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+  const w = new Uint32Array(80);
+  for (let i = 0; i < total; i += 64) {
+    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
+    for (let t = 16; t < 80; t++) { const x = w[t-3] ^ w[t-8] ^ w[t-14] ^ w[t-16]; w[t] = (x << 1) | (x >>> 31); }
+    let a = h0, b = h1, c = h2, d = h3, e = h4;
+    for (let t = 0; t < 80; t++) {
+      let f, k;
+      if (t < 20) { f = (b & c) | (~b & d); k = 0x5A827999; }
+      else if (t < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
+      else if (t < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+      else { f = b ^ c ^ d; k = 0xCA62C1D6; }
+      const tmp = (((a << 5) | (a >>> 27)) + f + e + k + w[t]) >>> 0;
+      e = d; d = c; c = ((b << 30) | (b >>> 2)) >>> 0; b = a; a = tmp;
     }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0; h4 = (h4 + e) >>> 0;
+  }
+  const out = new Uint8Array(20), odv = new DataView(out.buffer);
+  [h0, h1, h2, h3, h4].forEach((v, i) => odv.setUint32(i * 4, v));
+  return out;
+}
+function hmacSha1(key, msg) {
+  const B = 64;
+  if (key.length > B) key = sha1Bytes(key);
+  const k = new Uint8Array(B); k.set(key);
+  const inner = new Uint8Array(B + msg.length), outer = new Uint8Array(B + 20);
+  for (let i = 0; i < B; i++) { inner[i] = k[i] ^ 0x36; outer[i] = k[i] ^ 0x5c; }
+  inner.set(msg, B); outer.set(sha1Bytes(inner), B);
+  return sha1Bytes(outer);
+}
+async function hmac(algo, key, msg) {
+  if (algo === 'SHA1') return hmacSha1(key, msg);
+  if (!(window.crypto && crypto.subtle)) throw new Error('no-subtle');
+  const name = algo === 'SHA256' ? 'SHA-256' : 'SHA-512';
+  const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: { name } }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, msg));
+}
+async function totpForCounter(keyBytes, counter, algo, digits) {
+  const msg = new Uint8Array(8), dv = new DataView(msg.buffer);
+  dv.setUint32(0, Math.floor(counter / 0x100000000));
+  dv.setUint32(4, counter >>> 0);
+  const h = await hmac(algo, keyBytes, msg);
+  const o = h[h.length - 1] & 0x0f;
+  const bin = ((h[o] & 0x7f) << 24) | (h[o+1] << 16) | (h[o+2] << 8) | h[o+3];
+  return String(bin % Math.pow(10, digits)).padStart(digits, '0');
+}
+function base32ToBytes(b32) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = 0, value = 0; const out = [];
+  for (const ch of b32) {
+    value = (value << 5) | chars.indexOf(ch); bits += 5;
+    if (bits >= 8) { out.push((value >>> (bits - 8)) & 0xff); bits -= 8; }
+  }
+  return new Uint8Array(out);
+}
 
-    function hmacSha1(key, msg) {
-        const block = 64;
-        if (key.length > block) key = sha1Bytes(key);
-        const k = new Uint8Array(block);
-        k.set(key);
-        const inner = new Uint8Array(block + msg.length);
-        const outer = new Uint8Array(block + 20);
-        for (let i = 0; i < block; i++) {
-            inner[i] = k[i] ^ 0x36;
-            outer[i] = k[i] ^ 0x5c;
-        }
-        inner.set(msg, block);
-        outer.set(sha1Bytes(inner), block);
-        return sha1Bytes(outer);
+/* فحص ذاتي: متجه اختبار رسمي RFC 4226 (العداد 1 => 287082) */
+async function selfTest() {
+  try {
+    const key = new Uint8Array(Array.from('12345678901234567890').map(c => c.charCodeAt(0)));
+    return (await totpForCounter(key, 1, 'SHA1', 6)) === '287082';
+  } catch (e) { return false; }
+}
+
+/* ========== 2) مزامنة الوقت (صامتة، متعددة المصادر، دورية) ========== */
+let serverBase = Date.now(), perfBase = performance.now(), synced = false, syncDone = false;
+const nowMs = () => serverBase + (performance.now() - perfBase);
+
+function timedFetch(url, ms) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 4000);
+  return fetch(url, { cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(t));
+}
+function parseIso(s) {
+  s = String(s).replace(/(\.\d{3})\d+/, '$1');
+  if (!/(Z|[+-]\d{2}:?\d{2})$/.test(s)) s += 'Z';
+  const t = Date.parse(s); if (isNaN(t)) throw new Error('bad-date'); return t;
+}
+async function measure(getServerMs) {
+  const t0 = Date.now(), s = await getServerMs(), t1 = Date.now();
+  return s - (t0 + t1) / 2;
+}
+const sources = [
+  () => measure(async () => { const d = await (await timedFetch('https://worldtimeapi.org/api/timezone/Etc/UTC')).json(); return d.utc_datetime ? parseIso(d.utc_datetime) : d.unixtime * 1000 + 500; }),
+  () => measure(async () => { const d = await (await timedFetch('https://timeapi.io/api/time/current/zone?timeZone=UTC')).json(); return parseIso(d.dateTime); }),
+  () => measure(async () => { const t = await (await timedFetch('https://www.cloudflare.com/cdn-cgi/trace')).text(); const m = t.match(/ts=([\d.]+)/); if (!m) throw new Error('no-ts'); return parseFloat(m[1]) * 1000; })
+];
+async function syncTime() {
+  const res = await Promise.allSettled(sources.map(f => f()));
+  const offs = res.filter(r => r.status === 'fulfilled' && isFinite(r.value)).map(r => r.value).sort((a, b) => a - b);
+  if (offs.length) {
+    const med = offs.length % 2 ? offs[(offs.length - 1) / 2] : (offs[offs.length / 2 - 1] + offs[offs.length / 2]) / 2;
+    serverBase = Date.now() + med; perfBase = performance.now(); synced = true; lastCounter = null;
+  }
+  syncDone = true;
+  document.getElementById('syncNote').style.display = synced ? 'none' : 'block';
+}
+let syncPromise = syncTime();
+setInterval(() => { syncPromise = syncTime(); }, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastCounter = null; syncPromise = syncTime(); updateDisplay(); } });
+
+/* ========== 3) المحلل الذكي للمدخلات (واتساب / رابط otpauth / فراغات / أرقام عربية) ========== */
+function parseInput(raw) {
+  let s = String(raw || '');
+  s = s.replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 0x660).replace(/[\u06F0-\u06F9]/g, d => d.charCodeAt(0) - 0x6F0);
+  try { if (/%[0-9a-f]{2}/i.test(s)) s = decodeURIComponent(s); } catch (e) {}
+  const cfg = { algo: 'SHA1', digits: 6, period: 30 };
+  const get = n => { const m = s.match(new RegExp('[?&\\s]' + n + '=([^&\\s]+)', 'i')); return m ? m[1] : null; };
+  let secret = s;
+  const sm = get('secret');
+  if (sm) {
+    secret = sm;
+    const a = (get('algorithm') || '').toUpperCase().replace('-', '');
+    if (a === 'SHA1' || a === 'SHA256' || a === 'SHA512') cfg.algo = a;
+    const d = parseInt(get('digits'), 10); if (d >= 6 && d <= 8) cfg.digits = d;
+    const p = parseInt(get('period'), 10); if (p >= 10 && p <= 120) cfg.period = p;
+  }
+  secret = secret.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const bad = secret.match(/[0189]/g);
+  return { secret, cfg, invalid: bad ? Array.from(new Set(bad)) : [] };
+}
+const validLen = n => n >= 16 && [0, 2, 4, 5, 7].indexOf(n % 8) !== -1;
+
+/* ========== 4) العرض والتحديث المستمر ========== */
+const inputEl = document.getElementById('secretKey'), errorEl = document.getElementById('errorMsg');
+const resultEl = document.getElementById('resultArea'), codeEl = document.getElementById('totpCode');
+const fillEl = document.getElementById('progressFill'), remEl = document.getElementById('timeRemaining');
+let timer = null, cfg = null, keyBytes = null, lastCounter = null, busy = false, currentCode = '', activeKey = '', typingTimer = null, lastRemaining = 0;
+
+function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+function hideResult() { resultEl.style.display = 'none'; if (timer) { clearInterval(timer); timer = null; } cfg = null; activeKey = ''; currentCode = ''; }
+
+async function updateDisplay() {
+  if (!cfg || busy) return;
+  busy = true;
+  try {
+    const epoch = Math.floor(nowMs() / 1000), counter = Math.floor(epoch / cfg.period);
+    if (counter !== lastCounter) {
+      const c = await totpForCounter(keyBytes, counter, cfg.algo, cfg.digits);
+      if (!cfg) return;
+      currentCode = c; lastCounter = counter; codeEl.textContent = c;
     }
+    const remaining = cfg.period - (epoch % cfg.period);
+    remEl.textContent = remaining;
+    fillEl.classList.toggle('no-anim', remaining > lastRemaining);
+    lastRemaining = remaining;
+    fillEl.style.width = ((remaining / cfg.period) * 100) + '%';
+    const warn = Math.min(10, cfg.period / 3), danger = Math.min(5, cfg.period / 6);
+    fillEl.style.backgroundColor = remaining <= danger ? '#ef4444' : remaining <= warn ? '#f59e0b' : '#38bdf8';
+  } catch (e) {
+    showError('تعذر توليد الرمز على هذا المتصفح، جرّب متصفحاً آخر أو تواصل مع الدعم.');
+  } finally { busy = false; }
+}
 
-    async function hmac(algo, key, msg) {
-        if (algo === 'SHA1') return hmacSha1(key, msg);
-        if (!(window.crypto && crypto.subtle)) throw new Error('no-subtle');
-        const name = algo === 'SHA256' ? 'SHA-256' : 'SHA-512';
-        const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: { name } }, false, ['sign']);
-        return new Uint8Array(await crypto.subtle.sign('HMAC', k, msg));
-    }
+async function start(p) {
+  cfg = p.cfg; keyBytes = base32ToBytes(p.secret); lastCounter = null; activeKey = p.secret + JSON.stringify(p.cfg);
+  errorEl.style.display = 'none';
+  resultEl.style.display = 'block';
+  if (!syncDone) await Promise.race([syncPromise, new Promise(r => setTimeout(r, 2500))]);
+  if (!cfg) return;
+  await updateDisplay();
+  if (timer) clearInterval(timer);
+  timer = setInterval(updateDisplay, 250);
+}
 
-    // =====================================================
-    // 2) تحليل وتنظيف المفتاح (يدعم رابط otpauth كامل)
-    // =====================================================
-    function parseSecretInput(raw) {
-        let text = (raw || '').trim();
-        const opts = { algo: 'SHA1', digits: 6, period: 30 };
+/* raw: النص، force: ضغط الزر أو لصق (بدون انتظار) */
+function handle(raw, force) {
+  clearTimeout(typingTimer);
+  const p = parseInput(raw);
+  if (!p.secret) { errorEl.style.display = 'none'; hideResult(); if (force) showError('الرجاء إدخال المفتاح السري أولاً.'); return; }
+  if (inputEl.value !== p.secret) inputEl.value = p.secret;
+  if (p.invalid.length) { hideResult(); showError('المفتاح يحتوي على رموز غير صحيحة (' + p.invalid.join(' ') + ')، المفتاح لا يحتوي إلا على الحروف A-Z والأرقام 2-7. تأكد من نسخه كاملاً.'); return; }
+  if (!validLen(p.secret.length)) {
+    hideResult();
+    if (force) showError('المفتاح غير مكتمل (' + p.secret.length + ' حرفاً)، يرجى التأكد من نسخه بالكامل.');
+    else errorEl.style.display = 'none';
+    return;
+  }
+  if (activeKey === p.secret + JSON.stringify(p.cfg) && cfg) { errorEl.style.display = 'none'; return; }
+  start(p);
+}
 
-        // تحويل الأرقام العربية/الفارسية إلى لاتينية
-        text = text
-            .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
-            .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0));
+inputEl.addEventListener('paste', function (e) {
+  const txt = (e.clipboardData || window.clipboardData).getData('text');
+  if (txt) { e.preventDefault(); handle(txt, true); }
+});
+inputEl.addEventListener('input', function () {
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => handle(inputEl.value, false), 600);
+});
+document.getElementById('generateBtn').addEventListener('click', () => handle(inputEl.value, true));
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handle(inputEl.value, true); });
 
-        if (/secret=/i.test(text)) {
-            const get = name => {
-                const m = text.match(new RegExp('[?&]' + name + '=([^&#\\s]+)', 'i'));
-                return m ? decodeURIComponent(m[1]) : null;
-            };
-            const s = get('secret');
-            if (s) text = s;
-            const a = get('algorithm');
-            if (a) {
-                const up = a.toUpperCase().replace('-', '');
-                if (['SHA1', 'SHA256', 'SHA512'].includes(up)) opts.algo = up;
-            }
-            const d = parseInt(get('digits'), 10);
-            if (d >= 6 && d <= 8) opts.digits = d;
-            const p = parseInt(get('period'), 10);
-            if (p >= 1 && p <= 300) opts.period = p;
-        }
+/* ========== 5) النسخ (أرقام فقط، بدون أي مسافات) ========== */
+const COPY_LABEL = 'نسخ الرمز المباشر';
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+let copyTimer = null;
+document.getElementById('copyBtn').addEventListener('click', function () {
+  const code = (currentCode || '').replace(/\D/g, '');
+  if (!code) return;
+  const btn = this, textEl = document.getElementById('copyText');
+  const done = () => {
+    btn.classList.add('success'); textEl.textContent = 'تم النسخ بنجاح! ✓';
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => { btn.classList.remove('success'); textEl.textContent = COPY_LABEL; }, 2000);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(code).then(done).catch(() => { fallbackCopy(code); done(); });
+  } else { fallbackCopy(code); done(); }
+});
 
-        // إزالة المسافات والشرطات والمحارف المخفية وعلامة "="
-        text = text
-            .replace(/[\s\u00A0\u200B-\u200F\u202A-\u202E\u2060\uFEFF\-_=]/g, '')
-            .toUpperCase();
-
-        const bad = text.match(/[^A-Z2-7]/g);
-        if (bad) return { error: 'المفتاح يحتوي على رموز غير صالحة: ' + [...new Set(bad)].join(' ') + ' — تأكد من النسخ الصحيح (المفتاح يتكون من حروف A-Z وأرقام 2-7 فقط).' };
-        if (text.length < 8) return { error: 'المفتاح قصير جداً، يرجى التأكد من النسخ الصحيح.' };
-
-        return { secret: text, ...opts };
-    }
-
-    function base32ToBytes(b32) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        let bits = 0, value = 0;
-        const out = [];
-        for (const ch of b32) {
-            value = (value << 5) | chars.indexOf(ch);
-            bits += 5;
-            if (bits >= 8) {
-                out.push((value >>> (bits - 8)) & 0xff);
-                bits -= 8;
-            }
-        }
-        return new Uint8Array(out);
-    }
-
-    // =====================================================
-    // 3) خوارزمية TOTP (RFC 6238 / RFC 4226)
-    // =====================================================
-    async function totpForCounter(keyBytes, counter, algo, digits) {
-        const msg = new Uint8Array(8);
-        const dv = new DataView(msg.buffer);
-        dv.setUint32(0, Math.floor(counter / 0x100000000));
-        dv.setUint32(4, counter >>> 0);
-        const h = await hmac(algo, keyBytes, msg);
-        const o = h[h.length - 1] & 0x0f;
-        const bin = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
-        return String(bin % Math.pow(10, digits)).padStart(digits, '0');
-    }
-
-    // =====================================================
-    // 4) مزامنة الوقت من عدة مصادر (وليس مصدر واحد)
-    // =====================================================
-    let serverTimeOffset = 0;
-    let syncPromise = null;
-
-    async function timedFetch(url, ms = 4000) {
-        const c = new AbortController();
-        const t = setTimeout(() => c.abort(), ms);
-        try { return await fetch(url, { cache: 'no-store', signal: c.signal }); }
-        finally { clearTimeout(t); }
-    }
-
-    function parseIso(s) {
-        s = String(s).replace(/(\.\d{3})\d+/, '$1');
-        if (!/(Z|[+-]\d{2}:?\d{2})$/.test(s)) s += 'Z';
-        const t = Date.parse(s);
-        if (isNaN(t)) throw new Error('bad-date');
-        return t;
-    }
-
-    // يرجع الفارق (بالميلي ثانية) بين وقت السيرفر ووقت الجهاز
-    async function measureOffset(getServerMs) {
-        const t0 = Date.now();
-        const serverMs = await getServerMs();
-        const t1 = Date.now();
-        return serverMs - (t0 + t1) / 2;
-    }
-
-    const apiSources = [
-        () => measureOffset(async () => {
-            const r = await timedFetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-            if (!r.ok) throw new Error('http');
-            const d = await r.json();
-            return d.utc_datetime ? parseIso(d.utc_datetime) : d.unixtime * 1000 + 500;
-        }),
-        () => measureOffset(async () => {
-            const r = await timedFetch('https://timeapi.io/api/time/current/zone?timeZone=UTC');
-            if (!r.ok) throw new Error('http');
-            const d = await r.json();
-            return parseIso(d.dateTime);
-        }),
-        () => measureOffset(async () => {
-            const r = await timedFetch('https://www.cloudflare.com/cdn-cgi/trace');
-            if (!r.ok) throw new Error('http');
-            const m = (await r.text()).match(/ts=([\d.]+)/);
-            if (!m) throw new Error('no-ts');
-            return parseFloat(m[1]) * 1000;
-        })
-    ];
-
-    // احتياطي: ترويسة Date من نفس موقعك (تعمل دائماً عند الاستضافة على http/https)
-    function ownServerSource() {
-        if (!/^https?:$/.test(location.protocol)) return Promise.reject(new Error('no-http'));
-        return measureOffset(async () => {
-            const r = await timedFetch(location.pathname + '?t=' + Date.now());
-            const d = r.headers.get('Date');
-            if (!d) throw new Error('no-date');
-            return Date.parse(d) + 500;
-        });
-    }
-
-    async function syncNetworkTime() {
-        let offset = null;
-        try { offset = await Promise.any(apiSources.map(f => f())); }
-        catch (e) {
-            try { offset = await ownServerSource(); } catch (e2) { offset = null; }
-        }
-        if (offset !== null && isFinite(offset)) serverTimeOffset = offset;
-    }
-
-    function getCorrectedMs() { return Date.now() + serverTimeOffset; }
-
-    function startSync() { syncPromise = syncNetworkTime(); return syncPromise; }
-    startSync();
-    setInterval(startSync, 5 * 60 * 1000);
-
-    // =====================================================
-    // 5) الواجهة والتحديث اللحظي
-    // =====================================================
-    let totpInterval = null;
-    let currentCode = "", prevCode = "", nextCode = "";
-    let cfg = null, keyBytes = null, lastCounter = null, busy = false;
-
-    function showError(msg) {
-        const el = document.getElementById('errorMsg');
-        el.textContent = msg;
-        el.style.display = 'block';
-        document.getElementById('resultArea').style.display = 'none';
-        if (totpInterval) clearInterval(totpInterval);
-        totpInterval = null;
-    }
-
-    async function startTotp() {
-        const parsed = parseSecretInput(document.getElementById('secretKey').value);
-        if (parsed.error) { showError(parsed.error); return; }
-
-        cfg = parsed;
-        keyBytes = base32ToBytes(parsed.secret);
-        lastCounter = null;
-
-        document.getElementById('errorMsg').style.display = 'none';
-        document.getElementById('resultArea').style.display = 'block';
-
-        // ننتظر اكتمال مزامنة الوقت (بحد أقصى 5 ثوانٍ) قبل أول توليد
-        await Promise.race([syncPromise, new Promise(r => setTimeout(r, 5000))]);
-
-        try { await updateDisplay(); }
-        catch (e) { showError('تعذر توليد الرمز على هذا المتصفح، جرّب متصفحاً آخر.'); return; }
-
-        if (totpInterval) clearInterval(totpInterval);
-        totpInterval = setInterval(updateDisplay, 250);
-    }
-
-    async function updateDisplay() {
-        if (!cfg || busy) return;
-        busy = true;
-        try {
-            const epoch = Math.floor(getCorrectedMs() / 1000);
-            const counter = Math.floor(epoch / cfg.period);
-
-            if (counter !== lastCounter) {
-                const [c, p, n] = await Promise.all([
-                    totpForCounter(keyBytes, counter, cfg.algo, cfg.digits),
-                    totpForCounter(keyBytes, counter - 1, cfg.algo, cfg.digits),
-                    totpForCounter(keyBytes, counter + 1, cfg.algo, cfg.digits)
-                ]);
-                currentCode = c; prevCode = p; nextCode = n;
-                lastCounter = counter;
-
-                const group = cfg.digits === 8 ? 4 : 3;
-                document.getElementById('totpCode').textContent = c.match(new RegExp('.{1,' + group + '}', 'g')).join(' ');
-                document.getElementById('prevCodeDisplay').textContent = p;
-                document.getElementById('nextCodeDisplay').textContent = n;
-            }
-
-            const remaining = cfg.period - (epoch % cfg.period);
-
-            const progressFill = document.getElementById('progressFill');
-            progressFill.style.width = ((remaining / cfg.period) * 100) + '%';
-            const warn = Math.min(10, cfg.period / 3), danger = Math.min(5, cfg.period / 6);
-            progressFill.style.backgroundColor =
-                remaining <= danger ? '#ef4444' : remaining <= warn ? '#f59e0b' : '#38bdf8';
-        } finally {
-            busy = false;
-        }
-    }
-
-    // =====================================================
-    // 6) النسخ (مع حل بديل للمتصفحات التي تمنع clipboard)
-    // =====================================================
-    function fallbackCopy(text) {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); } catch (e) {}
-        document.body.removeChild(ta);
-    }
-
-    function copyCode(code, btnId, textId) {
-        if (!code) return;
-        const clean = code.replace(/\s/g, '');
-
-        const done = () => {
-            const btn = document.getElementById(btnId);
-            const textEl = document.getElementById(textId);
-            const original = textEl.innerHTML;
-            btn.classList.add('success');
-            textEl.textContent = 'تم النسخ بنجاح';
-            setTimeout(() => {
-                btn.classList.remove('success');
-                textEl.innerHTML = original;
-            }, 2000);
-        };
-
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(clean).then(done).catch(() => { fallbackCopy(clean); done(); });
-        } else {
-            fallbackCopy(clean);
-            done();
-        }
-    }
-
-    document.getElementById('copyYear').textContent = new Date().getFullYear();
-    document.getElementById('generateBtn').addEventListener('click', startTotp);
-    document.getElementById('secretKey').addEventListener('keydown', e => { if (e.key === 'Enter') startTotp(); });
-    document.getElementById('secretKey').addEventListener('input', function () {
-        document.getElementById('errorMsg').style.display = 'none';
-    });
-    </script>
+selfTest().then(ok => { if (!ok) console.error('2FA self-test failed'); });
+})();
+</script>
 </body>
 </html>
