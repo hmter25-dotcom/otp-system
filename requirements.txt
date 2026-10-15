@@ -4,3 +4,4 @@ gunicorn==21.2.0
 beautifulsoup4==4.12.3
 requests
 playwright
+pyotp==2.9.0
