@@ -32,12 +32,13 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
 .brand-logo{height:60px;width:auto;object-fit:contain;border-radius:12px;filter:drop-shadow(0 5px 15px rgba(0,0,0,.3));background:#fff}
 .brand-name{font-size:15px;font-weight:800;background:linear-gradient(135deg,#fff,var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 
-#loader{text-align:center;color:var(--muted);font-weight:700;font-size:18px;margin:40px 0}
+#loader{text-align:center;color:var(--muted);font-weight:700;font-size:18px;margin:40px 0;line-height:1.7}
 #errorBox{text-align:center;border-top:4px solid var(--red);padding-top:20px}
 #errorBox h2{font-size:20px;font-weight:700;margin:15px 0 10px}
 #errorBox p{color:var(--muted);font-size:14px;line-height:1.6}
 .retry-btn{margin-top:20px;background:#1e293b;color:#fff;border:1px solid var(--line);padding:10px 28px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:background .3s}
 .retry-btn:hover{background:#334155}
+.retry-btn:disabled{opacity:.6;cursor:not-allowed}
 #contentBox{animation:fadeIn .4s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -52,15 +53,22 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
 
 .otp-container{background:rgba(220,38,38,.1);border:1px solid rgba(153,27,27,.5);padding:25px 20px;border-radius:16px;text-align:center;margin-bottom:20px}
 .otp-title{color:#fca5a5;font-size:14px;font-weight:700;margin-bottom:15px}
+.otp-note{color:var(--muted);font-size:13px;margin-bottom:15px;line-height:1.6}
 .code-display{font-size:clamp(34px,11vw,48px);font-weight:900;letter-spacing:6px;color:#fff;margin-bottom:20px;text-shadow:0 0 25px rgba(239,68,68,.4);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums;user-select:all}
 .progress-bar{width:100%;height:6px;background:#450a0a;border-radius:10px;overflow:hidden;margin-bottom:10px}
 .progress-fill{height:100%;background:var(--red);width:100%;transition:width .25s linear,background-color .3s}
 .time-text{color:var(--muted);font-size:12px}
 .time-text.warn{color:var(--amber)}
+.copy-otp-btn{margin-top:14px}
+#activeOtpSection:focus{outline:none}
+
+.reveal-btn{width:100%;background:linear-gradient(135deg,var(--sky),#2563eb);color:#fff;border:none;padding:16px;border-radius:14px;font-size:17px;font-weight:800;cursor:pointer;transition:transform .3s,box-shadow .3s;box-shadow:0 8px 20px rgba(56,189,248,.3);margin-top:10px}
+.reveal-btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(56,189,248,.4)}
+.reveal-btn:active{transform:translateY(0)}
 
 .alert-box{background:rgba(234,179,8,.1);border:1px solid rgba(161,98,7,.3);padding:15px;border-radius:12px;margin-bottom:25px}
-.alert-box p{color:#fef08a;font-size:13px;line-height:1.6;margin-bottom:5px;font-weight:700}
-.alert-box ul{color:#d1d5db;font-size:12px;margin-right:20px;line-height:1.7}
+.alert-box p{color:#fef08a;font-size:13px;line-height:1.6;margin-bottom:10px;font-weight:700}
+.alert-box ul,.alert-box ol{color:#d1d5db;font-size:13px;margin-right:20px;line-height:1.8}
 .alert-box.info{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3)}
 .alert-box.info p{color:var(--sky)}
 
@@ -91,7 +99,7 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     </div>
   </div>
 
-  <div id="loader" role="status">جاري استخراج البيانات المشفرة لمرة واحدة... ⏳</div>
+  <div id="loader" role="status">جاري فحص التذكرة الآمنة... ⏳</div>
 
   <div id="errorBox" role="alert" hidden>
     <span class="icon-error" aria-hidden="true"></span>
@@ -100,10 +108,23 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     <button type="button" class="retry-btn" id="retryBtn" hidden>إعادة المحاولة</button>
   </div>
 
+  <noscript>
+    <p style="text-align:center;color:#fca5a5;line-height:1.7">هذه الصفحة تحتاج تفعيل JavaScript لعرض بيانات الدخول.</p>
+  </noscript>
+
   <div id="contentBox" hidden>
     <div class="header">
       <span class="icon-youtube" aria-hidden="true"></span>
       <h1>تصريح دخول بريميوم</h1>
+    </div>
+
+    <div class="alert-box info">
+      <p>📌 طريقة الدخول (خطوة بخطوة):</p>
+      <ol>
+        <li>انسخ البريد الإلكتروني وكلمة المرور بالأسفل.</li>
+        <li>افتح تطبيق <b>YouTube</b> على جهازك واختر "إضافة حساب" ثم أدخل البيانات.</li>
+        <li>عندما يطلب منك جوجل "رمز التحقق"، عُد إلى هذه الصفحة واضغط على زر إظهار الرمز أدناه.</li>
+      </ol>
     </div>
 
     <div class="data-box">
@@ -117,25 +138,25 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
 
     <div class="otp-container">
       <p class="otp-title">🛡️ كود التحقق الآمن (2FA)</p>
-      <div class="code-display" id="otpTxt" dir="ltr">------</div>
-      <div class="progress-bar" role="progressbar" aria-label="الوقت المتبقي للكود" aria-valuemin="0" aria-valuemax="30" id="timeTrack"><div class="progress-fill" id="timeBar"></div></div>
-      <p class="time-text" id="timeText">جاري تحديث الكود...</p>
+
+      <div id="revealSection">
+        <p class="otp-note">⚠️ لا تقم بإظهار الكود إلا إذا وصلت لصفحة رمز التحقق في يوتيوب لتجنب انتهاء صلاحيته.</p>
+        <button type="button" id="revealBtn" class="reveal-btn">إظهار رمز التحقق الآن</button>
+      </div>
+
+      <div id="activeOtpSection" tabindex="-1" hidden>
+        <div class="code-display" id="otpTxt" dir="ltr">------</div>
+        <div class="progress-bar" role="progressbar" aria-label="الوقت المتبقي للكود" aria-valuemin="0" aria-valuemax="30" id="timeTrack"><div class="progress-fill" id="timeBar"></div></div>
+        <p class="time-text" id="timeText">جاري تحديث الكود...</p>
+        <button type="button" class="retry-btn copy-otp-btn" id="copyOtpBtn">نسخ الكود</button>
+      </div>
     </div>
 
     <div class="alert-box">
       <p>⚠️ تحذير أمني هام:</p>
       <ul>
-        <li>انسخ البيانات وسجل دخولك <b>الآن وفوراً</b>.</li>
-        <li>لا تقم بتحديث هذه الصفحة وإلا ستحترق تذكرة الدخول نهائياً.</li>
+        <li><b>هذا الرابط يعمل لمرة واحدة فقط!</b> بمجرد إغلاق أو تحديث هذه الصفحة (Refresh) ستُتلف التذكرة نهائياً ولن تتمكن من الدخول مرة أخرى.</li>
         <li><b>يُمنع منعاً باتاً</b> تغيير كلمة المرور أو إعدادات الأمان للحساب.</li>
-      </ul>
-    </div>
-    <div class="alert-box info">
-      <p>📌 طريقة الدخول:</p>
-      <ul>
-        <li>افتح تطبيق YouTube على جهازك.</li>
-        <li>اختر "إضافة حساب" وأدخل الإيميل ثم كلمة المرور.</li>
-        <li>سيطلب منك جوجل "رمز التحقق"، أدخل الكود الظاهر أعلاه المكون من 6 أرقام.</li>
       </ul>
     </div>
 
@@ -153,12 +174,19 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
 
   const CONFIG = Object.freeze({
     API_BASE: 'https://otp-system-gfa0.onrender.com',
-    TIMEOUT_MS: 15000,
-    PERIOD: 30,          // ثواني صلاحية الكود
+    WARMUP_MS: 70000,        // أقصى مدة لإيقاظ السيرفر قبل فتح الرابط
+    PING_TIMEOUT_MS: 10000,
+    SLOW_NOTICE_MS: 6000,
+    CLAIM_TIMEOUT_MS: 20000,
+    PERIOD: 30,
     DIGITS: 6,
     TICK_MS: 250,
   });
   const TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+  class ApiError extends Error {
+    constructor(kind) { super(kind); this.kind = kind; }
+  }
 
   const $ = (id) => document.getElementById(id);
   const els = {
@@ -166,20 +194,39 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     errorText: $('errorText'), retryBtn: $('retryBtn'), content: $('contentBox'),
     email: $('emailTxt'), pass: $('passTxt'), otp: $('otpTxt'),
     bar: $('timeBar'), track: $('timeTrack'), timeText: $('timeText'), live: $('liveStatus'),
+    revealBtn: $('revealBtn'), revealSection: $('revealSection'),
+    activeOtpSection: $('activeOtpSection'), copyOtpBtn: $('copyOtpBtn'),
+  };
+
+  const LOADER_TEXT = {
+    checking: 'جاري فحص التذكرة الآمنة... ⏳',
+    waking: 'السيرفر يستيقظ الآن، يرجى الانتظار قليلاً (قد يستغرق حتى دقيقة) ولا تغلق الصفحة... ⏳',
+    opening: 'جاري فتح التذكرة... ⏳',
   };
 
   const ERRORS = {
-    invalid:     { title: 'الرابط غير صالح', text: 'عذراً، يبدو أن هذا الرابط قد تم فتحه مسبقاً لحماية الحساب، أو أنه غير صحيح.', retry: false },
+    invalid:     { title: 'الرابط غير صالح أو مستخدم', text: 'عذراً، هذا الرابط يعمل لمرة واحدة وقد تم استخدامه أو إتلافه مسبقاً لحماية الحساب.', retry: false },
     rateLimited: { title: 'محاولات كثيرة', text: 'تم إيقاف المحاولات مؤقتاً. انتظر بضع دقائق ثم حاول مرة أخرى.', retry: false },
-    unavailable: { title: 'الخدمة غير متاحة حالياً', text: 'الخدمة متوقفة مؤقتاً. تواصل مع الدعم عبر تيليجرام.', retry: false },
-    network:     { title: 'تعذر الاتصال بالخادم', text: 'تحقق من اتصالك بالإنترنت ثم أعد المحاولة. إذا استمرت المشكلة تواصل مع الدعم.', retry: true },
-    badData:     { title: 'تعذر قراءة البيانات', text: 'وصلت بيانات غير مكتملة. تواصل مع الدعم عبر تيليجرام.', retry: false },
+    unavailable: { title: 'الخدمة غير متاحة حالياً', text: 'الخدمة متوقفة مؤقتاً ولم يتم استهلاك الرابط. حاول لاحقاً أو تواصل مع الدعم عبر تيليجرام.', retry: false },
+    network:     { title: 'تعذر الاتصال بالخادم', text: 'لم يتم استهلاك الرابط. تحقق من اتصالك بالإنترنت ثم أعد المحاولة، وإذا استمرت المشكلة تواصل مع الدعم.', retry: true },
+    uncertain:   { title: 'انقطع الاتصال أثناء فتح الرابط', text: 'قد يكون الرابط استُخدم قبل انقطاع الاتصال. أعد المحاولة مرة واحدة، وإذا ظهر أنه مستخدم تواصل مع الدعم عبر تيليجرام فوراً.', retry: true },
+    badData:     { title: 'تعذر قراءة البيانات', text: 'وصلت بيانات غير مكتملة. تواصل مع الدعم عبر تيليجرام مع إرسال رابطك.', retry: false },
   };
 
   let credentials = null;
+  let generateTotpFn = null;
   let tickTimer = null;
+  let busy = false;
+  let lastCounter = -1;
+  let lastLeft = -1;
 
-  // ---------- أدوات الواجهة ----------
+  // ---------- واجهة ----------
+  function stopTicking() {
+    if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+  }
+
+  function warnOnLeave(ev) { ev.preventDefault(); ev.returnValue = ''; }
+
   function showError(kind) {
     const e = ERRORS[kind] || ERRORS.invalid;
     stopTicking();
@@ -189,33 +236,55 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     els.errorTitle.textContent = e.title;
     els.errorText.textContent = e.text;
     els.retryBtn.hidden = !e.retry;
+    els.retryBtn.disabled = false;
     els.errorBox.hidden = false;
   }
 
-  function warnOnLeave(ev) { ev.preventDefault(); ev.returnValue = ''; }
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // ---------- الاتصال بالـ API ----------
-  class ApiError extends Error {
-    constructor(kind) { super(kind); this.kind = kind; }
+  // ---------- الشبكة ----------
+  async function timedFetch(url, timeoutMs) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      return await fetch(url, {
+        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * يوقظ السيرفر (Render المجاني ينام) بدون لمس التوكن.
+   * هذا يمنع حرق الرابط لو انتهت مهلة الطلب أثناء بدء التشغيل البارد.
+   */
+  async function warmUp() {
+    const deadline = Date.now() + CONFIG.WARMUP_MS;
+    let attempt = 0;
+    while (Date.now() < deadline) {
+      if (navigator.onLine === false) return false;
+      try {
+        const res = await timedFetch(`${CONFIG.API_BASE}/`, CONFIG.PING_TIMEOUT_MS);
+        if (res.ok) return true;
+      } catch { /* السيرفر لم يستيقظ بعد */ }
+      attempt += 1;
+      await sleep(Math.min(1000 * attempt, 4000));
+    }
+    return false;
   }
 
   async function claimCredentials(token) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT_MS);
     let res;
     try {
-      res = await fetch(`${CONFIG.API_BASE}/api/yt/${encodeURIComponent(token)}`, {
-        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctrl.signal,
-      });
+      res = await timedFetch(`${CONFIG.API_BASE}/api/yt/${encodeURIComponent(token)}`, CONFIG.CLAIM_TIMEOUT_MS);
     } catch {
-      throw new ApiError('network');
-    } finally {
-      clearTimeout(timer);
+      throw new ApiError('uncertain'); // الطلب قد يكون وصل للسيرفر
     }
     if (res.status === 429) throw new ApiError('rateLimited');
     if (res.status === 503) throw new ApiError('unavailable');
     if (res.status === 403 || res.status === 404) throw new ApiError('invalid');
-    if (!res.ok) throw new ApiError('network');
+    if (!res.ok) throw new ApiError('uncertain');
 
     let body;
     try { body = await res.json(); } catch { throw new ApiError('badData'); }
@@ -261,39 +330,35 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     };
   }
 
-  // ---------- المؤقت ----------
-  let lastCounter = -1;
-  let lastLeft = -1;
+  // ---------- العداد ----------
+  async function tick() {
+    if (!generateTotpFn) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const counter = Math.floor(nowSec / CONFIG.PERIOD);
+    const left = CONFIG.PERIOD - (nowSec % CONFIG.PERIOD);
 
-  function stopTicking() {
-    if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+    if (counter !== lastCounter) {
+      lastCounter = counter;
+      try { els.otp.textContent = await generateTotpFn(counter); }
+      catch { els.otp.textContent = '------'; }
+    }
+    if (left !== lastLeft) {
+      lastLeft = left;
+      const warn = left <= 5;
+      els.bar.style.width = `${(left / CONFIG.PERIOD) * 100}%`;
+      els.bar.style.background = warn ? '#f59e0b' : '#ef4444';
+      els.track.setAttribute('aria-valuenow', String(left));
+      els.timeText.classList.toggle('warn', warn);
+      els.timeText.textContent = warn
+        ? `يتغير الكود بعد ${left} ثواني!`
+        : `صالح لمدة ${left} ثانية... (يتحدث تلقائياً)`;
+    }
   }
 
-  function startTicking(generate) {
-    const tick = async () => {
-      const nowMs = Date.now();
-      const nowSec = Math.floor(nowMs / 1000);
-      const counter = Math.floor(nowSec / CONFIG.PERIOD);
-      const left = CONFIG.PERIOD - (nowSec % CONFIG.PERIOD);
-
-      if (counter !== lastCounter) {
-        lastCounter = counter;
-        try { els.otp.textContent = await generate(counter); }
-        catch { els.otp.textContent = '------'; }
-      }
-      if (left !== lastLeft) {
-        lastLeft = left;
-        const warn = left <= 5;
-        els.bar.style.width = `${(left / CONFIG.PERIOD) * 100}%`;
-        els.bar.style.background = warn ? '#f59e0b' : '#ef4444';
-        els.track.setAttribute('aria-valuenow', String(left));
-        els.timeText.classList.toggle('warn', warn);
-        els.timeText.textContent = warn
-          ? `يتغير الكود بعد ${left} ثواني!`
-          : `صالح لمدة ${left} ثانية...`;
-      }
-    };
+  function startTicking() {
     stopTicking();
+    lastCounter = -1;
+    lastLeft = -1;
     tick();
     tickTimer = setInterval(tick, CONFIG.TICK_MS);
   }
@@ -317,36 +382,55 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     }
   }
 
+  function announce(message) {
+    els.live.textContent = message;
+    setTimeout(() => { if (els.live.textContent === message) els.live.textContent = ''; }, 2500);
+  }
+
   function setupCopyButtons() {
     const labels = { email: 'البريد الإلكتروني', password: 'كلمة المرور' };
     document.querySelectorAll('.copy-btn').forEach((btn) => {
+      const icon = btn.firstElementChild;
       let resetTimer = null;
       btn.addEventListener('click', async () => {
         const field = btn.dataset.copy;
         if (!credentials || !(field in credentials)) return;
         const ok = await copyText(credentials[field]);
-        btn.firstElementChild.className = ok ? 'icon-check' : 'icon-error-small';
-        btn.firstElementChild.textContent = ok ? '' : '⚠️';
-        els.live.textContent = ok ? `تم نسخ ${labels[field]}` : 'تعذر النسخ، انسخ يدوياً';
+        icon.className = ok ? 'icon-check' : '';
+        icon.textContent = ok ? '' : '⚠️';
+        announce(ok ? `تم نسخ ${labels[field]}` : 'تعذر النسخ، انسخ يدوياً');
         clearTimeout(resetTimer);
-        resetTimer = setTimeout(() => {
-          btn.firstElementChild.className = 'icon-copy';
-          btn.firstElementChild.textContent = '';
-          els.live.textContent = '';
-        }, 2000);
+        resetTimer = setTimeout(() => { icon.className = 'icon-copy'; icon.textContent = ''; }, 2000);
       });
+    });
+
+    let otpResetTimer = null;
+    els.copyOtpBtn.addEventListener('click', async () => {
+      const code = els.otp.textContent.trim();
+      if (!/^\d+$/.test(code)) return;
+      const ok = await copyText(code);
+      els.copyOtpBtn.textContent = ok ? 'تم النسخ ✅' : 'تعذر النسخ، انسخه يدوياً';
+      announce(ok ? 'تم نسخ كود التحقق' : 'تعذر النسخ');
+      clearTimeout(otpResetTimer);
+      otpResetTimer = setTimeout(() => { els.copyOtpBtn.textContent = 'نسخ الكود'; }, 2000);
     });
   }
 
   // ---------- التشغيل ----------
   async function init(token) {
+    if (busy) return;
+    busy = true;
     els.errorBox.hidden = true;
     els.loader.hidden = false;
+    els.loader.textContent = LOADER_TEXT.checking;
+    const slowNotice = setTimeout(() => { els.loader.textContent = LOADER_TEXT.waking; }, CONFIG.SLOW_NOTICE_MS);
     try {
-      credentials = await claimCredentials(token);
+      if (!(await warmUp())) throw new ApiError('network');
+      clearTimeout(slowNotice);
+      els.loader.textContent = LOADER_TEXT.opening;
 
-      let generate;
-      try { generate = await createTotp(credentials.secret); }
+      credentials = await claimCredentials(token);
+      try { generateTotpFn = await createTotp(credentials.secret); }
       catch { throw new ApiError('badData'); }
 
       els.email.textContent = credentials.email;
@@ -354,9 +438,12 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
       els.loader.hidden = true;
       els.content.hidden = false;
       window.addEventListener('beforeunload', warnOnLeave);
-      startTicking(generate);
+      // العداد لا يبدأ هنا: ينتظر ضغط العميل على زر الإظهار
     } catch (err) {
-      showError(err instanceof ApiError ? err.kind : 'network');
+      showError(err instanceof ApiError ? err.kind : 'uncertain');
+    } finally {
+      clearTimeout(slowNotice);
+      busy = false;
     }
   }
 
@@ -368,13 +455,30 @@ body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:va
     });
     setupCopyButtons();
 
+    els.revealBtn.addEventListener('click', () => {
+      if (!generateTotpFn) return;
+      els.revealSection.hidden = true;
+      els.activeOtpSection.hidden = false;
+      startTicking();
+      els.activeOtpSection.focus({ preventScroll: true });
+      announce('تم إظهار رمز التحقق');
+    });
+
+    // تحديث فوري للكود عند العودة للتبويب بعد وجوده بالخلفية
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && tickTimer) tick();
+    });
+
     const token = new URLSearchParams(window.location.search).get('token') || '';
     if (!TOKEN_RE.test(token)) return showError('invalid');
 
     // إزالة التوكن من شريط العنوان والسجل
     try { history.replaceState(null, '', window.location.pathname); } catch { /* ignore */ }
 
-    els.retryBtn.addEventListener('click', () => init(token));
+    els.retryBtn.addEventListener('click', () => {
+      els.retryBtn.disabled = true;
+      init(token);
+    });
     init(token);
   }
 
