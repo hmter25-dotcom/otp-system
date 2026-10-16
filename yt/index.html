@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f172a">
+<!-- عند تغيير API_BASE تذكّر تحديث connect-src هنا -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://otp-system-gfa0.onrender.com; base-uri 'none'; form-action 'none'">
+<title>تصريح دخول يوتيوب بريميوم | إليفارا وبوكس أب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+:root{
+  --bg-1:#0f172a; --bg-2:#020617;
+  --text:#f8fafc; --muted:#94a3b8;
+  --red:#ef4444; --amber:#f59e0b; --green:#10b981; --sky:#38bdf8;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif}
+[hidden]{display:none!important}
+body{background:linear-gradient(135deg,var(--bg-1) 0%,var(--bg-2) 100%);color:var(--text);display:flex;justify-content:center;align-items:center;min-height:100vh;min-height:100dvh;padding:20px}
+:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.container{background:rgba(30,41,59,.6);-webkit-backdrop-filter:blur(15px);backdrop-filter:blur(15px);border:1px solid var(--line);border-radius:24px;padding:40px 30px;width:100%;max-width:500px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.brands-container{display:flex;justify-content:center;align-items:center;gap:25px;margin-bottom:25px;border-bottom:1px dashed var(--line);padding-bottom:25px}
+.brand-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.brand-logo{height:60px;width:auto;object-fit:contain;border-radius:12px;filter:drop-shadow(0 5px 15px rgba(0,0,0,.3));background:#fff}
+.brand-name{font-size:15px;font-weight:800;background:linear-gradient(135deg,#fff,var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+#loader{text-align:center;color:var(--muted);font-weight:700;font-size:18px;margin:40px 0}
+#errorBox{text-align:center;border-top:4px solid var(--red);padding-top:20px}
+#errorBox h2{font-size:20px;font-weight:700;margin:15px 0 10px}
+#errorBox p{color:var(--muted);font-size:14px;line-height:1.6}
+.retry-btn{margin-top:20px;background:#1e293b;color:#fff;border:1px solid var(--line);padding:10px 28px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;transition:background .3s}
+.retry-btn:hover{background:#334155}
+#contentBox{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.header{text-align:center;margin-bottom:30px}
+.header h1{font-size:24px;font-weight:800;color:#fff;margin-top:15px}
+.data-box{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.05);padding:15px 20px;border-radius:16px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.data-box>div{min-width:0}
+.data-label{color:var(--muted);font-size:13px;margin-bottom:5px}
+.data-value{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;color:var(--text);font-weight:700;direction:ltr;text-align:right;overflow-wrap:anywhere;user-select:all}
+.copy-btn{flex-shrink:0;background:#1e293b;color:#fff;border:none;padding:10px;border-radius:10px;cursor:pointer;transition:background .3s;min-width:40px;min-height:40px}
+.copy-btn:hover{background:#334155}
+
+.otp-container{background:rgba(220,38,38,.1);border:1px solid rgba(153,27,27,.5);padding:25px 20px;border-radius:16px;text-align:center;margin-bottom:20px}
+.otp-title{color:#fca5a5;font-size:14px;font-weight:700;margin-bottom:15px}
+.code-display{font-size:clamp(34px,11vw,48px);font-weight:900;letter-spacing:6px;color:#fff;margin-bottom:20px;text-shadow:0 0 25px rgba(239,68,68,.4);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums;user-select:all}
+.progress-bar{width:100%;height:6px;background:#450a0a;border-radius:10px;overflow:hidden;margin-bottom:10px}
+.progress-fill{height:100%;background:var(--red);width:100%;transition:width .25s linear,background-color .3s}
+.time-text{color:var(--muted);font-size:12px}
+.time-text.warn{color:var(--amber)}
+
+.alert-box{background:rgba(234,179,8,.1);border:1px solid rgba(161,98,7,.3);padding:15px;border-radius:12px;margin-bottom:25px}
+.alert-box p{color:#fef08a;font-size:13px;line-height:1.6;margin-bottom:5px;font-weight:700}
+.alert-box ul{color:#d1d5db;font-size:12px;margin-right:20px;line-height:1.7}
+.alert-box.info{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3)}
+.alert-box.info p{color:var(--sky)}
+
+.support-section{text-align:center;padding-top:25px;border-top:1px dashed rgba(255,255,255,.1)}
+.telegram-btn-support{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#229ED9;color:#fff;text-decoration:none;padding:12px 36px;border-radius:50px;font-size:16px;font-weight:700;box-shadow:0 8px 25px rgba(34,158,217,.4);transition:all .3s ease;direction:ltr}
+.telegram-btn-support:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(34,158,217,.6);background:#2bb3f3}
+
+.icon-youtube,.icon-error{display:block;text-align:center;line-height:1}
+.icon-youtube::before{content:"▶";font-size:48px;color:var(--red);filter:drop-shadow(0 4px 10px rgba(239,68,68,.4))}
+.icon-error::before{content:"❌";font-size:48px}
+.icon-copy::before{content:"📋";font-size:16px}
+.icon-check::before{content:"✅";font-size:16px}
+
+@media (max-width:380px){.container{padding:30px 18px}.data-box{padding:12px 14px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="container">
+  <div class="brands-container">
+    <div class="brand-item">
+      <img src="../9a908a4b-668e-4fc8-8718-a8818453410e.jpeg" alt="Elevaraa" class="brand-logo" height="60" decoding="async">
+      <span class="brand-name">إليفارا</span>
+    </div>
+    <div class="brand-item">
+      <img src="../e609dc1a-c899-4d45-8724-8bedeb033422.jpeg" alt="BoxUp" class="brand-logo" height="60" decoding="async">
+      <span class="brand-name">بوكس أب</span>
+    </div>
+  </div>
+
+  <div id="loader" role="status">جاري استخراج البيانات المشفرة لمرة واحدة... ⏳</div>
+
+  <div id="errorBox" role="alert" hidden>
+    <span class="icon-error" aria-hidden="true"></span>
+    <h2 id="errorTitle">الرابط غير صالح</h2>
+    <p id="errorText">عذراً، يبدو أن هذا الرابط قد تم فتحه مسبقاً لحماية الحساب، أو أنه غير صحيح.</p>
+    <button type="button" class="retry-btn" id="retryBtn" hidden>إعادة المحاولة</button>
+  </div>
+
+  <div id="contentBox" hidden>
+    <div class="header">
+      <span class="icon-youtube" aria-hidden="true"></span>
+      <h1>تصريح دخول بريميوم</h1>
+    </div>
+
+    <div class="data-box">
+      <div><p class="data-label">البريد الإلكتروني</p><p class="data-value" id="emailTxt"></p></div>
+      <button type="button" class="copy-btn" data-copy="email" aria-label="نسخ البريد الإلكتروني" title="نسخ البريد"><span class="icon-copy" aria-hidden="true"></span></button>
+    </div>
+    <div class="data-box">
+      <div><p class="data-label">كلمة المرور</p><p class="data-value" id="passTxt"></p></div>
+      <button type="button" class="copy-btn" data-copy="password" aria-label="نسخ كلمة المرور" title="نسخ كلمة المرور"><span class="icon-copy" aria-hidden="true"></span></button>
+    </div>
+
+    <div class="otp-container">
+      <p class="otp-title">🛡️ كود التحقق الآمن (2FA)</p>
+      <div class="code-display" id="otpTxt" dir="ltr">------</div>
+      <div class="progress-bar" role="progressbar" aria-label="الوقت المتبقي للكود" aria-valuemin="0" aria-valuemax="30" id="timeTrack"><div class="progress-fill" id="timeBar"></div></div>
+      <p class="time-text" id="timeText">جاري تحديث الكود...</p>
+    </div>
+
+    <div class="alert-box">
+      <p>⚠️ تحذير أمني هام:</p>
+      <ul>
+        <li>انسخ البيانات وسجل دخولك <b>الآن وفوراً</b>.</li>
+        <li>لا تقم بتحديث هذه الصفحة وإلا ستحترق تذكرة الدخول نهائياً.</li>
+        <li><b>يُمنع منعاً باتاً</b> تغيير كلمة المرور أو إعدادات الأمان للحساب.</li>
+      </ul>
+    </div>
+    <div class="alert-box info">
+      <p>📌 طريقة الدخول:</p>
+      <ul>
+        <li>افتح تطبيق YouTube على جهازك.</li>
+        <li>اختر "إضافة حساب" وأدخل الإيميل ثم كلمة المرور.</li>
+        <li>سيطلب منك جوجل "رمز التحقق"، أدخل الكود الظاهر أعلاه المكون من 6 أرقام.</li>
+      </ul>
+    </div>
+
+    <div class="support-section">
+      <a href="https://t.me/elevaraa" target="_blank" rel="noopener noreferrer" class="telegram-btn-support"><span>@elevaraa</span></a>
+    </div>
+  </div>
+
+  <div class="sr-only" id="liveStatus" aria-live="polite"></div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const CONFIG = Object.freeze({
+    API_BASE: 'https://otp-system-gfa0.onrender.com',
+    TIMEOUT_MS: 15000,
+    PERIOD: 30,          // ثواني صلاحية الكود
+    DIGITS: 6,
+    TICK_MS: 250,
+  });
+  const TOKEN_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    loader: $('loader'), errorBox: $('errorBox'), errorTitle: $('errorTitle'),
+    errorText: $('errorText'), retryBtn: $('retryBtn'), content: $('contentBox'),
+    email: $('emailTxt'), pass: $('passTxt'), otp: $('otpTxt'),
+    bar: $('timeBar'), track: $('timeTrack'), timeText: $('timeText'), live: $('liveStatus'),
+  };
+
+  const ERRORS = {
+    invalid:     { title: 'الرابط غير صالح', text: 'عذراً، يبدو أن هذا الرابط قد تم فتحه مسبقاً لحماية الحساب، أو أنه غير صحيح.', retry: false },
+    rateLimited: { title: 'محاولات كثيرة', text: 'تم إيقاف المحاولات مؤقتاً. انتظر بضع دقائق ثم حاول مرة أخرى.', retry: false },
+    unavailable: { title: 'الخدمة غير متاحة حالياً', text: 'الخدمة متوقفة مؤقتاً. تواصل مع الدعم عبر تيليجرام.', retry: false },
+    network:     { title: 'تعذر الاتصال بالخادم', text: 'تحقق من اتصالك بالإنترنت ثم أعد المحاولة. إذا استمرت المشكلة تواصل مع الدعم.', retry: true },
+    badData:     { title: 'تعذر قراءة البيانات', text: 'وصلت بيانات غير مكتملة. تواصل مع الدعم عبر تيليجرام.', retry: false },
+  };
+
+  let credentials = null;
+  let tickTimer = null;
+
+  // ---------- أدوات الواجهة ----------
+  function showError(kind) {
+    const e = ERRORS[kind] || ERRORS.invalid;
+    stopTicking();
+    window.removeEventListener('beforeunload', warnOnLeave);
+    els.loader.hidden = true;
+    els.content.hidden = true;
+    els.errorTitle.textContent = e.title;
+    els.errorText.textContent = e.text;
+    els.retryBtn.hidden = !e.retry;
+    els.errorBox.hidden = false;
+  }
+
+  function warnOnLeave(ev) { ev.preventDefault(); ev.returnValue = ''; }
+
+  // ---------- الاتصال بالـ API ----------
+  class ApiError extends Error {
+    constructor(kind) { super(kind); this.kind = kind; }
+  }
+
+  async function claimCredentials(token) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT_MS);
+    let res;
+    try {
+      res = await fetch(`${CONFIG.API_BASE}/api/yt/${encodeURIComponent(token)}`, {
+        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctrl.signal,
+      });
+    } catch {
+      throw new ApiError('network');
+    } finally {
+      clearTimeout(timer);
+    }
+    if (res.status === 429) throw new ApiError('rateLimited');
+    if (res.status === 503) throw new ApiError('unavailable');
+    if (res.status === 403 || res.status === 404) throw new ApiError('invalid');
+    if (!res.ok) throw new ApiError('network');
+
+    let body;
+    try { body = await res.json(); } catch { throw new ApiError('badData'); }
+    const ok = body && body.status === 'success' &&
+      [body.email, body.password, body.secret].every((v) => typeof v === 'string' && v);
+    if (!ok) throw new ApiError('badData');
+    return { email: body.email, password: body.password, secret: body.secret };
+  }
+
+  // ---------- TOTP (RFC 6238) بدون مكتبات خارجية ----------
+  function base32Decode(input) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const clean = input.replace(/[\s=-]/g, '').toUpperCase();
+    const out = [];
+    let bits = 0, value = 0;
+    for (const ch of clean) {
+      const idx = alphabet.indexOf(ch);
+      if (idx < 0) throw new Error('Invalid base32');
+      value = (value << 5) | idx;
+      bits += 5;
+      if (bits >= 8) {
+        out.push((value >>> (bits - 8)) & 0xff);
+        bits -= 8;
+        value &= (1 << bits) - 1;
+      }
+    }
+    return new Uint8Array(out);
+  }
+
+  async function createTotp(secretBase32) {
+    if (!(window.crypto && crypto.subtle)) throw new Error('WebCrypto unavailable');
+    const key = await crypto.subtle.importKey(
+      'raw', base32Decode(secretBase32), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const mod = 10 ** CONFIG.DIGITS;
+    return async function generate(counter) {
+      const msg = new DataView(new ArrayBuffer(8));
+      msg.setUint32(0, Math.floor(counter / 2 ** 32));
+      msg.setUint32(4, counter >>> 0);
+      const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg));
+      const o = h[h.length - 1] & 0x0f;
+      const bin = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
+      return String(bin % mod).padStart(CONFIG.DIGITS, '0');
+    };
+  }
+
+  // ---------- المؤقت ----------
+  let lastCounter = -1;
+  let lastLeft = -1;
+
+  function stopTicking() {
+    if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+  }
+
+  function startTicking(generate) {
+    const tick = async () => {
+      const nowMs = Date.now();
+      const nowSec = Math.floor(nowMs / 1000);
+      const counter = Math.floor(nowSec / CONFIG.PERIOD);
+      const left = CONFIG.PERIOD - (nowSec % CONFIG.PERIOD);
+
+      if (counter !== lastCounter) {
+        lastCounter = counter;
+        try { els.otp.textContent = await generate(counter); }
+        catch { els.otp.textContent = '------'; }
+      }
+      if (left !== lastLeft) {
+        lastLeft = left;
+        const warn = left <= 5;
+        els.bar.style.width = `${(left / CONFIG.PERIOD) * 100}%`;
+        els.bar.style.background = warn ? '#f59e0b' : '#ef4444';
+        els.track.setAttribute('aria-valuenow', String(left));
+        els.timeText.classList.toggle('warn', warn);
+        els.timeText.textContent = warn
+          ? `يتغير الكود بعد ${left} ثواني!`
+          : `صالح لمدة ${left} ثانية...`;
+      }
+    };
+    stopTicking();
+    tick();
+    tickTimer = setInterval(tick, CONFIG.TICK_MS);
+  }
+
+  // ---------- النسخ ----------
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch { ok = false; }
+      ta.remove();
+      return ok;
+    }
+  }
+
+  function setupCopyButtons() {
+    const labels = { email: 'البريد الإلكتروني', password: 'كلمة المرور' };
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      let resetTimer = null;
+      btn.addEventListener('click', async () => {
+        const field = btn.dataset.copy;
+        if (!credentials || !(field in credentials)) return;
+        const ok = await copyText(credentials[field]);
+        btn.firstElementChild.className = ok ? 'icon-check' : 'icon-error-small';
+        btn.firstElementChild.textContent = ok ? '' : '⚠️';
+        els.live.textContent = ok ? `تم نسخ ${labels[field]}` : 'تعذر النسخ، انسخ يدوياً';
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          btn.firstElementChild.className = 'icon-copy';
+          btn.firstElementChild.textContent = '';
+          els.live.textContent = '';
+        }, 2000);
+      });
+    });
+  }
+
+  // ---------- التشغيل ----------
+  async function init(token) {
+    els.errorBox.hidden = true;
+    els.loader.hidden = false;
+    try {
+      credentials = await claimCredentials(token);
+
+      let generate;
+      try { generate = await createTotp(credentials.secret); }
+      catch { throw new ApiError('badData'); }
+
+      els.email.textContent = credentials.email;
+      els.pass.textContent = credentials.password;
+      els.loader.hidden = true;
+      els.content.hidden = false;
+      window.addEventListener('beforeunload', warnOnLeave);
+      startTicking(generate);
+    } catch (err) {
+      showError(err instanceof ApiError ? err.kind : 'network');
+    }
+  }
+
+  function boot() {
+    document.querySelectorAll('.brand-logo').forEach((img) => {
+      const hide = () => { img.hidden = true; };
+      img.addEventListener('error', hide);
+      if (img.complete && img.naturalWidth === 0) hide();
+    });
+    setupCopyButtons();
+
+    const token = new URLSearchParams(window.location.search).get('token') || '';
+    if (!TOKEN_RE.test(token)) return showError('invalid');
+
+    // إزالة التوكن من شريط العنوان والسجل
+    try { history.replaceState(null, '', window.location.pathname); } catch { /* ignore */ }
+
+    els.retryBtn.addEventListener('click', () => init(token));
+    init(token);
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
