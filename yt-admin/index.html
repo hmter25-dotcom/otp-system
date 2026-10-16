@@ -25,7 +25,11 @@
         <form id="loginForm" class="glass-panel p-8 rounded-xl shadow-lg w-full max-w-sm text-center border border-gray-100" novalidate>
             <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-shield-alt text-red-600 ml-2" aria-hidden="true"></i>الإدارة المركزية</h2>
             <label for="adminPassword" class="sr-only">رمز الدخول السري</label>
-            <input type="password" id="adminPassword" placeholder="رمز الدخول السري" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-4 text-center outline-none focus:ring-2 focus:ring-red-500">
+            <input type="password" id="adminPassword" placeholder="رمز الدخول السري" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-3 text-center outline-none focus:ring-2 focus:ring-red-500">
+            <label class="flex items-center justify-center gap-2 text-sm text-gray-600 mb-4 cursor-pointer select-none">
+                <input type="checkbox" id="rememberMe" checked class="accent-red-600">
+                تذكرني على هذا الجهاز (7 أيام)
+            </label>
             <button type="submit" id="loginBtn" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">تسجيل الدخول</button>
             <p id="loginError" role="alert" class="text-red-500 text-sm mt-3 hidden"></p>
             <p id="loginHint" class="text-gray-400 text-xs mt-3 hidden">قد يستغرق الاتصال حتى دقيقة إذا كان السيرفر في وضع السكون...</p>
@@ -55,7 +59,7 @@
                 <div id="newLinksPanel" class="glass-panel p-6 rounded-xl shadow border border-gray-100 hidden">
                     <div class="flex justify-between items-center mb-3 border-b pb-2">
                         <h3 class="text-lg font-bold">الروابط الجديدة</h3>
-                        <button type="button" id="copyAllBtn" class="text-blue-600 hover:text-blue-800 transition text-sm"><i class="far fa-copy ml-1" aria-hidden="true"></i>نسخ الكل</button>
+                        <button type="button" id="copyNewBtn" class="text-blue-600 hover:text-blue-800 transition text-sm"><i class="far fa-copy ml-1" aria-hidden="true"></i>نسخ الكل</button>
                     </div>
                     <label for="newLinksText" class="sr-only">الروابط الجديدة</label>
                     <textarea id="newLinksText" readonly rows="5" dir="ltr" class="w-full p-3 border rounded-lg text-xs font-mono text-gray-600 bg-gray-50 outline-none"></textarea>
@@ -63,13 +67,24 @@
             </div>
 
             <div class="glass-panel p-6 rounded-xl shadow border border-gray-100 md:col-span-2">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div class="flex flex-wrap justify-between items-start gap-2 mb-4 border-b pb-3">
                     <div>
-                        <h3 class="text-lg font-bold">الروابط المُصدرة</h3>
+                        <h3 class="text-lg font-bold">الروابط المُصدرة <span id="domainTag" dir="ltr" class="hidden text-xs font-mono font-normal bg-gray-100 text-gray-600 px-2 py-1 rounded align-middle"></span></h3>
                         <p id="statsText" class="text-xs text-gray-500 mt-1" aria-live="polite"></p>
+                        <p id="updatedText" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
-                    <button type="button" id="refreshBtn" class="text-blue-600 hover:text-blue-800 transition disabled:opacity-60"><i class="fas fa-sync-alt" id="refreshIcon" aria-hidden="true"></i> تحديث القائمة</button>
+                    <div class="flex items-center gap-4 text-sm">
+                        <button type="button" id="copyActiveBtn" class="text-blue-600 hover:text-blue-800 transition"><i class="far fa-copy ml-1" aria-hidden="true"></i>نسخ الروابط النشطة</button>
+                        <button type="button" id="refreshBtn" class="text-blue-600 hover:text-blue-800 transition disabled:opacity-60"><i class="fas fa-sync-alt ml-1" id="refreshIcon" aria-hidden="true"></i>تحديث القائمة</button>
+                    </div>
                 </div>
+
+                <div class="flex gap-2 mb-4" role="group" aria-label="تصفية الروابط">
+                    <button type="button" data-filter="all" aria-pressed="true" class="filter-btn px-3 py-1 rounded-full text-xs font-bold border">الكل</button>
+                    <button type="button" data-filter="active" aria-pressed="false" class="filter-btn px-3 py-1 rounded-full text-xs font-bold border">نشط</button>
+                    <button type="button" data-filter="used" aria-pressed="false" class="filter-btn px-3 py-1 rounded-full text-xs font-bold border">محروق</button>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-right">
                         <thead>
@@ -92,30 +107,71 @@
 (() => {
     'use strict';
 
-    // الرابط الخاص بسيرفر Render الذي سيرد على الطلبات
     const API_URL = 'https://otp-system-gfa0.onrender.com';
-    const REQUEST_TIMEOUT_MS = 45000;      // يتحمل بدء تشغيل Render البارد
-    const IDLE_LOGOUT_MS = 15 * 60 * 1000; // خروج تلقائي بعد 15 دقيقة خمول
+    const REQUEST_TIMEOUT_MS = 45000;          // يتحمل بدء تشغيل Render البارد
+    const AUTO_REFRESH_MS = 30000;             // تحديث تلقائي هادئ للقائمة
+    const IDLE_LOGOUT_MS = 15 * 60 * 1000;     // خروج تلقائي (فقط إذا لم يُفعّل "تذكرني")
+    const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+    const SESSION_KEY = 'ytAdminSession';
+    const LEGACY_KEY = 'ytAdminPass';          // مفتاح النسخة القديمة (يُرحَّل تلقائياً)
     const MIN_COUNT = 1;
     const MAX_COUNT = 50;
 
     const $ = (id) => document.getElementById(id);
     const els = {
         loginScreen: $('loginScreen'), dashboard: $('dashboardScreen'),
-        loginForm: $('loginForm'), password: $('adminPassword'), loginBtn: $('loginBtn'),
-        loginError: $('loginError'), loginHint: $('loginHint'),
+        loginForm: $('loginForm'), password: $('adminPassword'), remember: $('rememberMe'),
+        loginBtn: $('loginBtn'), loginError: $('loginError'), loginHint: $('loginHint'),
         logoutBtn: $('logoutBtn'), count: $('linkCount'), generateBtn: $('generateBtn'),
-        refreshBtn: $('refreshBtn'), refreshIcon: $('refreshIcon'), stats: $('statsText'),
-        tbody: $('linksTableBody'), newPanel: $('newLinksPanel'), newText: $('newLinksText'),
-        copyAll: $('copyAllBtn'), toasts: $('toasts'),
+        refreshBtn: $('refreshBtn'), refreshIcon: $('refreshIcon'),
+        stats: $('statsText'), updated: $('updatedText'), domainTag: $('domainTag'),
+        tbody: $('linksTableBody'), copyActive: $('copyActiveBtn'),
+        newPanel: $('newLinksPanel'), newText: $('newLinksText'), copyNew: $('copyNewBtn'),
+        toasts: $('toasts'),
     };
+    const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
 
-    // كلمة المرور في الذاكرة فقط (لا تُخزَّن في المتصفح)
+    // كلمة المرور في الذاكرة أثناء الجلسة. التخزين الدائم اختياري عبر "تذكرني".
     let adminPass = '';
+    let remembered = false;
     let loading = false;
     let idleTimer = null;
+    let autoTimer = null;
+    let allLinks = [];
+    let activeFilter = 'all';
 
     const GENERATE_LABEL = '<i class="fas fa-magic ml-2" aria-hidden="true"></i> توليد الروابط';
+    const FILTER_ON = ['bg-red-600', 'text-white', 'border-red-600'];
+    const FILTER_OFF = ['bg-white', 'text-gray-600', 'border-gray-300', 'hover:bg-gray-50'];
+
+    // ---------- التخزين ----------
+    const store = {
+        get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+        set(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } },
+        del(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } },
+    };
+
+    function readSession() {
+        const raw = store.get(SESSION_KEY);
+        if (raw) {
+            try {
+                const s = JSON.parse(raw);
+                if (s && typeof s.p === 'string' && s.p && Number(s.exp) > Date.now()) return s.p;
+            } catch { /* تالف */ }
+            store.del(SESSION_KEY);
+        }
+        return store.get(LEGACY_KEY) || '';
+    }
+
+    function saveSession(pass) {
+        store.set(SESSION_KEY, JSON.stringify({ p: pass, exp: Date.now() + SESSION_TTL_MS }));
+        store.del(LEGACY_KEY);
+    }
+
+    function clearSession() {
+        store.del(SESSION_KEY);
+        store.del(LEGACY_KEY);
+    }
 
     // ---------- أدوات ----------
     function el(tag, className, text) {
@@ -193,48 +249,80 @@
         return body;
     }
 
-    // ---------- الشاشات والجلسة ----------
+    // ---------- الجلسة والشاشات ----------
     function showLoginError(message) {
         els.loginError.textContent = message;
         els.loginError.classList.toggle('hidden', !message);
+    }
+
+    function setLoginBusy(busy, label) {
+        els.loginBtn.disabled = busy;
+        els.loginBtn.textContent = busy ? label : 'تسجيل الدخول';
+        els.loginHint.classList.toggle('hidden', !busy);
+    }
+
+    function armIdleTimer() {
+        clearTimeout(idleTimer);
+        if (!adminPass || remembered) return;
+        idleTimer = setTimeout(() => logout('تم تسجيل الخروج تلقائياً لعدم النشاط.'), IDLE_LOGOUT_MS);
+    }
+
+    function startAutoRefresh() {
+        clearInterval(autoTimer);
+        autoTimer = setInterval(() => {
+            if (adminPass && !document.hidden && !loading) refreshList({ silent: true });
+        }, AUTO_REFRESH_MS);
     }
 
     function showDashboard() {
         els.loginScreen.classList.add('hidden');
         els.dashboard.classList.remove('hidden');
         armIdleTimer();
+        startAutoRefresh();
     }
 
     function logout(reason) {
         adminPass = '';
+        remembered = false;
+        allLinks = [];
+        clearSession();
         clearTimeout(idleTimer);
+        clearInterval(autoTimer);
         els.dashboard.classList.add('hidden');
         els.loginScreen.classList.remove('hidden');
         els.password.value = '';
         els.tbody.replaceChildren();
         els.stats.textContent = '';
+        els.updated.textContent = '';
+        els.domainTag.classList.add('hidden');
         els.newText.value = '';
         els.newPanel.classList.add('hidden');
         showLoginError('');
+        setLoginBusy(false);
         if (reason) toast(reason, 'info');
         els.password.focus();
     }
 
-    function armIdleTimer() {
-        clearTimeout(idleTimer);
-        if (!adminPass) return;
-        idleTimer = setTimeout(() => logout('تم تسجيل الخروج تلقائياً لعدم النشاط.'), IDLE_LOGOUT_MS);
-    }
-
-    function handleApiFailure(err) {
-        if (err instanceof ApiError && err.kind === 'unauthorized' && adminPass) {
-            logout('انتهت الجلسة، سجّل الدخول من جديد.');
+    function handleApiFailure(err, { silent = false } = {}) {
+        if (err.kind === 'unauthorized' && adminPass) {
+            logout('انتهت الجلسة أو تغيّر الرمز، سجّل الدخول من جديد.');
             return;
         }
-        toast(ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server, 'error');
+        if (!silent) toast(ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server, 'error');
     }
 
     // ---------- عرض الروابط ----------
+    function setFilter(next) {
+        activeFilter = next;
+        filterButtons.forEach((btn) => {
+            const on = btn.dataset.filter === next;
+            btn.setAttribute('aria-pressed', String(on));
+            btn.classList.remove(...FILTER_ON, ...FILTER_OFF);
+            btn.classList.add(...(on ? FILTER_ON : FILTER_OFF));
+        });
+        renderLinks();
+    }
+
     function buildRow(link) {
         const used = Boolean(link.used);
         const url = typeof link.url === 'string' ? link.url : '';
@@ -244,8 +332,9 @@
         const badge = el('span', used
             ? 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold'
             : 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold');
-        badge.append(el('i', `fas ${used ? 'fa-burn' : 'fa-check-circle'} ml-1`), used ? 'محروق' : 'نشط');
-        badge.firstChild.setAttribute('aria-hidden', 'true');
+        const badgeIcon = el('i', `fas ${used ? 'fa-burn' : 'fa-check-circle'} ml-1`);
+        badgeIcon.setAttribute('aria-hidden', 'true');
+        badge.append(badgeIcon, used ? 'محروق' : 'نشط');
         statusTd.appendChild(badge);
 
         const urlTd = el('td', 'p-3 text-sm font-mono text-gray-500 break-all', url);
@@ -255,7 +344,6 @@
         if (used) {
             actionTd.appendChild(el('span', 'text-gray-400 text-sm', 'مُستخدم'));
         } else if (isHttpsUrl(url)) {
-            // زر النسخ لا يظهر إذا كان الرابط محروق
             const btn = el('button', 'text-blue-500 hover:bg-blue-50 p-2 rounded transition');
             btn.type = 'button';
             btn.setAttribute('aria-label', 'نسخ الرابط');
@@ -277,42 +365,67 @@
         return tr;
     }
 
-    function renderLinks(links) {
+    function emptyRow(message) {
+        const tr = el('tr');
+        const td = el('td', 'p-4 text-center text-gray-500', message);
+        td.colSpan = 3;
+        tr.appendChild(td);
+        return tr;
+    }
+
+    function updateMeta() {
+        const active = allLinks.filter((l) => !l.used).length;
+        els.stats.textContent = allLinks.length
+            ? `نشط: ${active} | محروق: ${allLinks.length - active} (آخر ${allLinks.length} رابط)`
+            : '';
+        els.updated.textContent = `آخر تحديث: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+
+        // النطاق يُستخرج من الروابط نفسها بدل كتابته يدوياً في الصفحة
+        const sample = allLinks.map((l) => l.url).find(isHttpsUrl);
+        if (sample) {
+            els.domainTag.textContent = new URL(sample).hostname;
+            els.domainTag.classList.remove('hidden');
+        } else {
+            els.domainTag.classList.add('hidden');
+        }
+    }
+
+    function renderLinks() {
         els.tbody.replaceChildren();
-        if (!links.length) {
-            const tr = el('tr');
-            const td = el('td', 'p-4 text-center text-gray-500', 'لا توجد روابط مُصدرة بعد.');
-            td.colSpan = 3;
-            tr.appendChild(td);
-            els.tbody.appendChild(tr);
-            els.stats.textContent = '';
+        if (!allLinks.length) {
+            els.tbody.appendChild(emptyRow('لا توجد روابط مُصدرة بعد.'));
+            return;
+        }
+        const visible = allLinks.filter((l) =>
+            activeFilter === 'all' || (activeFilter === 'used' ? l.used : !l.used));
+        if (!visible.length) {
+            els.tbody.appendChild(emptyRow('لا توجد روابط في هذا التصنيف.'));
             return;
         }
         const fragment = document.createDocumentFragment();
-        let active = 0;
-        for (const link of links) {
-            if (!link.used) active += 1;
-            fragment.appendChild(buildRow(link));
-        }
+        visible.forEach((link) => fragment.appendChild(buildRow(link)));
         els.tbody.appendChild(fragment);
-        els.stats.textContent = `نشط: ${active} | محروق: ${links.length - active} (آخر ${links.length} رابط)`;
     }
 
     async function fetchLinks() {
         const body = await api('/admin/youtube/list');
-        const links = Array.isArray(body.links) ? body.links : [];
-        renderLinks(links);
+        allLinks = (Array.isArray(body.links) ? body.links : [])
+            .filter((l) => l && typeof l === 'object');
+        updateMeta();
+        renderLinks();
     }
 
-    async function refreshList() {
+    async function refreshList({ silent = false } = {}) {
         if (loading) return;
         loading = true;
-        els.refreshBtn.disabled = true;
-        els.refreshIcon.classList.add('fa-spin');
+        if (!silent) {
+            els.refreshBtn.disabled = true;
+            els.refreshIcon.classList.add('fa-spin');
+        }
         try {
             await fetchLinks();
         } catch (err) {
-            handleApiFailure(err);
+            handleApiFailure(err, { silent });
         } finally {
             loading = false;
             els.refreshBtn.disabled = false;
@@ -321,31 +434,37 @@
     }
 
     // ---------- الإجراءات ----------
-    async function handleLogin(event) {
-        event.preventDefault();
+    async function attemptLogin(pass, { restoring = false } = {}) {
         if (loading) return;
-        const typed = els.password.value;
-        if (!typed) return showLoginError('أدخل رمز الدخول.');
-
         loading = true;
-        adminPass = typed;
+        adminPass = pass;
         showLoginError('');
-        els.loginBtn.disabled = true;
-        els.loginBtn.textContent = 'جاري التحقق...';
-        els.loginHint.classList.remove('hidden');
+        setLoginBusy(true, restoring ? 'جاري استعادة الجلسة...' : 'جاري التحقق...');
         try {
             await fetchLinks();
+            remembered = els.remember.checked;
+            if (remembered) saveSession(pass); else clearSession();
             els.password.value = '';
             showDashboard();
         } catch (err) {
             adminPass = '';
-            showLoginError(ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server);
+            if (err.kind === 'unauthorized') clearSession();   // الرمز المحفوظ لم يعد صالحاً
+            // عند فشل الشبكة نُبقي الجلسة المحفوظة لتعمل إعادة المحاولة
+            showLoginError(restoring && err.kind === 'network'
+                ? 'تعذر استعادة الجلسة بسبب الاتصال. اضغط تسجيل الدخول لإعادة المحاولة.'
+                : (ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server));
         } finally {
             loading = false;
-            els.loginBtn.disabled = false;
-            els.loginBtn.textContent = 'تسجيل الدخول';
-            els.loginHint.classList.add('hidden');
+            setLoginBusy(false);
         }
+    }
+
+    function handleLogin(event) {
+        event.preventDefault();
+        const typed = els.password.value;
+        const pass = typed || readSession();   // الحقل الفارغ يعيد استخدام الجلسة المحفوظة
+        if (!pass) return showLoginError('أدخل رمز الدخول.');
+        attemptLogin(pass, { restoring: !typed });
     }
 
     async function handleGenerate() {
@@ -356,7 +475,6 @@
             els.count.focus();
             return;
         }
-
         loading = true;
         els.generateBtn.disabled = true;
         els.generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2" aria-hidden="true"></i> جاري التوليد...';
@@ -376,21 +494,51 @@
         }
     }
 
-    async function handleCopyAll() {
+    async function handleCopyNew() {
         const ok = await copyText(els.newText.value);
         toast(ok ? 'تم نسخ كل الروابط.' : 'تعذر النسخ، يرجى نسخها يدوياً', ok ? 'success' : 'error');
+    }
+
+    async function handleCopyActive() {
+        const urls = allLinks.filter((l) => !l.used && isHttpsUrl(l.url)).map((l) => l.url);
+        if (!urls.length) return toast('لا توجد روابط نشطة للنسخ.', 'info');
+        const ok = await copyText(urls.join('\n'));
+        toast(ok ? `تم نسخ ${urls.length} رابط نشط.` : 'تعذر النسخ', ok ? 'success' : 'error');
     }
 
     // ---------- الربط ----------
     els.loginForm.addEventListener('submit', handleLogin);
     els.logoutBtn.addEventListener('click', () => logout());
     els.generateBtn.addEventListener('click', handleGenerate);
-    els.refreshBtn.addEventListener('click', refreshList);
-    els.copyAll.addEventListener('click', handleCopyAll);
+    els.refreshBtn.addEventListener('click', () => refreshList());
+    els.copyNew.addEventListener('click', handleCopyNew);
+    els.copyActive.addEventListener('click', handleCopyActive);
+    filterButtons.forEach((btn) => btn.addEventListener('click', () => setFilter(btn.dataset.filter)));
     ['click', 'keydown', 'touchstart'].forEach((evt) =>
         document.addEventListener(evt, armIdleTimer, { passive: true }));
 
-    els.password.focus();
+    // تسجيل الخروج من تبويب آخر ينعكس هنا
+    window.addEventListener('storage', (e) => {
+        if (e.key === SESSION_KEY && e.newValue === null && adminPass) {
+            logout('تم تسجيل الخروج من تبويب آخر.');
+        }
+    });
+
+    // تحديث فوري عند العودة للتبويب
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && adminPass && !loading) refreshList({ silent: true });
+    });
+
+    setFilter('all');
+
+    // استعادة الجلسة المحفوظة تلقائياً
+    const saved = readSession();
+    if (saved) {
+        els.remember.checked = true;
+        attemptLogin(saved, { restoring: true });
+    } else {
+        els.password.focus();
+    }
 })();
 </script>
 </body>
