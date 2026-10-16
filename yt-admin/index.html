@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="referrer" content="no-referrer">
+    <title>إدارة روابط يوتيوب | Elevaraa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        :focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
+        .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+        @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .toast { animation: toastIn .25s ease; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- شاشة الدخول -->
+    <div id="loginScreen" class="flex min-h-screen items-center justify-center p-4">
+        <form id="loginForm" class="glass-panel p-8 rounded-xl shadow-lg w-full max-w-sm text-center border border-gray-100" novalidate>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-shield-alt text-red-600 ml-2" aria-hidden="true"></i>الإدارة المركزية</h2>
+            <label for="adminPassword" class="sr-only">رمز الدخول السري</label>
+            <input type="password" id="adminPassword" placeholder="رمز الدخول السري" autocomplete="current-password" class="w-full p-3 border rounded-lg mb-4 text-center outline-none focus:ring-2 focus:ring-red-500">
+            <button type="submit" id="loginBtn" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">تسجيل الدخول</button>
+            <p id="loginError" role="alert" class="text-red-500 text-sm mt-3 hidden"></p>
+            <p id="loginHint" class="text-gray-400 text-xs mt-3 hidden">قد يستغرق الاتصال حتى دقيقة إذا كان السيرفر في وضع السكون...</p>
+        </form>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="dashboardScreen" class="hidden min-h-screen">
+        <nav class="bg-gray-900 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold"><i class="fab fa-youtube text-red-500 ml-2" aria-hidden="true"></i>موزع يوتيوب بريميوم</h1>
+                <button type="button" id="logoutBtn" class="text-sm bg-gray-700 px-4 py-2 rounded text-white hover:bg-gray-600 transition">تسجيل الخروج</button>
+            </div>
+        </nav>
+
+        <main class="container mx-auto mt-8 p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="h-fit space-y-6">
+                <div class="glass-panel p-6 rounded-xl shadow border border-gray-100">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">توليد روابط جديدة</h3>
+                    <label for="linkCount" class="block text-sm text-gray-600 mb-2">العدد المطلوب (1 إلى 50):</label>
+                    <input type="number" id="linkCount" value="1" min="1" max="50" step="1" inputmode="numeric" class="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-red-500">
+                    <button type="button" id="generateBtn" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg flex justify-center items-center hover:bg-red-700 transition shadow-md disabled:opacity-60 disabled:cursor-not-allowed">
+                        <i class="fas fa-magic ml-2" aria-hidden="true"></i> توليد الروابط
+                    </button>
+                </div>
+
+                <div id="newLinksPanel" class="glass-panel p-6 rounded-xl shadow border border-gray-100 hidden">
+                    <div class="flex justify-between items-center mb-3 border-b pb-2">
+                        <h3 class="text-lg font-bold">الروابط الجديدة</h3>
+                        <button type="button" id="copyAllBtn" class="text-blue-600 hover:text-blue-800 transition text-sm"><i class="far fa-copy ml-1" aria-hidden="true"></i>نسخ الكل</button>
+                    </div>
+                    <label for="newLinksText" class="sr-only">الروابط الجديدة</label>
+                    <textarea id="newLinksText" readonly rows="5" dir="ltr" class="w-full p-3 border rounded-lg text-xs font-mono text-gray-600 bg-gray-50 outline-none"></textarea>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-xl shadow border border-gray-100 md:col-span-2">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <div>
+                        <h3 class="text-lg font-bold">الروابط المُصدرة</h3>
+                        <p id="statsText" class="text-xs text-gray-500 mt-1" aria-live="polite"></p>
+                    </div>
+                    <button type="button" id="refreshBtn" class="text-blue-600 hover:text-blue-800 transition disabled:opacity-60"><i class="fas fa-sync-alt" id="refreshIcon" aria-hidden="true"></i> تحديث القائمة</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-sm">
+                                <th class="p-3" scope="col">الحالة</th>
+                                <th class="p-3" scope="col">الرابط</th>
+                                <th class="p-3 text-center" scope="col">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="linksTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toasts" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:w-80 space-y-2 z-50" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+    'use strict';
+
+    // الرابط الخاص بسيرفر Render الذي سيرد على الطلبات
+    const API_URL = 'https://otp-system-gfa0.onrender.com';
+    const REQUEST_TIMEOUT_MS = 45000;      // يتحمل بدء تشغيل Render البارد
+    const IDLE_LOGOUT_MS = 15 * 60 * 1000; // خروج تلقائي بعد 15 دقيقة خمول
+    const MIN_COUNT = 1;
+    const MAX_COUNT = 50;
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+        loginScreen: $('loginScreen'), dashboard: $('dashboardScreen'),
+        loginForm: $('loginForm'), password: $('adminPassword'), loginBtn: $('loginBtn'),
+        loginError: $('loginError'), loginHint: $('loginHint'),
+        logoutBtn: $('logoutBtn'), count: $('linkCount'), generateBtn: $('generateBtn'),
+        refreshBtn: $('refreshBtn'), refreshIcon: $('refreshIcon'), stats: $('statsText'),
+        tbody: $('linksTableBody'), newPanel: $('newLinksPanel'), newText: $('newLinksText'),
+        copyAll: $('copyAllBtn'), toasts: $('toasts'),
+    };
+
+    // كلمة المرور في الذاكرة فقط (لا تُخزَّن في المتصفح)
+    let adminPass = '';
+    let loading = false;
+    let idleTimer = null;
+
+    const GENERATE_LABEL = '<i class="fas fa-magic ml-2" aria-hidden="true"></i> توليد الروابط';
+
+    // ---------- أدوات ----------
+    function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+
+    function toast(message, type = 'info') {
+        const colors = { info: 'bg-gray-900', success: 'bg-green-600', error: 'bg-red-600' };
+        const node = el('div', `toast ${colors[type] || colors.info} text-white text-sm px-4 py-3 rounded-lg shadow-lg`, message);
+        els.toasts.appendChild(node);
+        setTimeout(() => node.remove(), 3500);
+    }
+
+    function isHttpsUrl(value) {
+        try { return new URL(value).protocol === 'https:'; } catch { return false; }
+    }
+
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch { ok = false; }
+            ta.remove();
+            return ok;
+        }
+    }
+
+    // ---------- الاتصال بالـ API ----------
+    class ApiError extends Error {
+        constructor(kind) { super(kind); this.kind = kind; }
+    }
+
+    const ERROR_MESSAGES = {
+        unauthorized: 'رمز المرور غير صحيح!',
+        rate: 'محاولات كثيرة، انتظر بضع دقائق ثم حاول مرة أخرى.',
+        unconfigured: 'لوحة الإدارة غير مفعّلة على السيرفر.',
+        network: 'تعذر الاتصال بالسيرفر، تأكد من الإنترنت وحاول مرة أخرى.',
+        server: 'حدث خطأ في الخادم، حاول مرة أخرى.',
+    };
+
+    async function api(path, payload = {}) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+        let res;
+        try {
+            res = await fetch(`${API_URL}${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: adminPass, ...payload }),
+                cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer',
+                signal: ctrl.signal,
+            });
+        } catch {
+            throw new ApiError('network');
+        } finally {
+            clearTimeout(timer);
+        }
+        if (res.status === 401) throw new ApiError('unauthorized');
+        if (res.status === 429) throw new ApiError('rate');
+        if (res.status === 503) throw new ApiError('unconfigured');
+        let body = null;
+        try { body = await res.json(); } catch { /* ignore */ }
+        if (!res.ok || !body || body.status !== 'success') throw new ApiError('server');
+        return body;
+    }
+
+    // ---------- الشاشات والجلسة ----------
+    function showLoginError(message) {
+        els.loginError.textContent = message;
+        els.loginError.classList.toggle('hidden', !message);
+    }
+
+    function showDashboard() {
+        els.loginScreen.classList.add('hidden');
+        els.dashboard.classList.remove('hidden');
+        armIdleTimer();
+    }
+
+    function logout(reason) {
+        adminPass = '';
+        clearTimeout(idleTimer);
+        els.dashboard.classList.add('hidden');
+        els.loginScreen.classList.remove('hidden');
+        els.password.value = '';
+        els.tbody.replaceChildren();
+        els.stats.textContent = '';
+        els.newText.value = '';
+        els.newPanel.classList.add('hidden');
+        showLoginError('');
+        if (reason) toast(reason, 'info');
+        els.password.focus();
+    }
+
+    function armIdleTimer() {
+        clearTimeout(idleTimer);
+        if (!adminPass) return;
+        idleTimer = setTimeout(() => logout('تم تسجيل الخروج تلقائياً لعدم النشاط.'), IDLE_LOGOUT_MS);
+    }
+
+    function handleApiFailure(err) {
+        if (err instanceof ApiError && err.kind === 'unauthorized' && adminPass) {
+            logout('انتهت الجلسة، سجّل الدخول من جديد.');
+            return;
+        }
+        toast(ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server, 'error');
+    }
+
+    // ---------- عرض الروابط ----------
+    function buildRow(link) {
+        const used = Boolean(link.used);
+        const url = typeof link.url === 'string' ? link.url : '';
+        const tr = el('tr', 'border-b last:border-0 hover:bg-gray-50 transition');
+
+        const statusTd = el('td', 'p-3');
+        const badge = el('span', used
+            ? 'bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold'
+            : 'bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold');
+        badge.append(el('i', `fas ${used ? 'fa-burn' : 'fa-check-circle'} ml-1`), used ? 'محروق' : 'نشط');
+        badge.firstChild.setAttribute('aria-hidden', 'true');
+        statusTd.appendChild(badge);
+
+        const urlTd = el('td', 'p-3 text-sm font-mono text-gray-500 break-all', url);
+        urlTd.dir = 'ltr';
+
+        const actionTd = el('td', 'p-3 text-center');
+        if (used) {
+            actionTd.appendChild(el('span', 'text-gray-400 text-sm', 'مُستخدم'));
+        } else if (isHttpsUrl(url)) {
+            // زر النسخ لا يظهر إذا كان الرابط محروق
+            const btn = el('button', 'text-blue-500 hover:bg-blue-50 p-2 rounded transition');
+            btn.type = 'button';
+            btn.setAttribute('aria-label', 'نسخ الرابط');
+            const icon = el('i', 'far fa-copy');
+            icon.setAttribute('aria-hidden', 'true');
+            btn.appendChild(icon);
+            btn.addEventListener('click', async () => {
+                const ok = await copyText(url);
+                icon.className = ok ? 'fas fa-check text-green-500' : 'fas fa-exclamation-triangle text-red-500';
+                if (!ok) toast('تعذر النسخ، يرجى نسخه يدوياً', 'error');
+                setTimeout(() => { icon.className = 'far fa-copy'; }, 2000);
+            });
+            actionTd.appendChild(btn);
+        } else {
+            actionTd.appendChild(el('span', 'text-gray-400 text-sm', 'غير صالح'));
+        }
+
+        tr.append(statusTd, urlTd, actionTd);
+        return tr;
+    }
+
+    function renderLinks(links) {
+        els.tbody.replaceChildren();
+        if (!links.length) {
+            const tr = el('tr');
+            const td = el('td', 'p-4 text-center text-gray-500', 'لا توجد روابط مُصدرة بعد.');
+            td.colSpan = 3;
+            tr.appendChild(td);
+            els.tbody.appendChild(tr);
+            els.stats.textContent = '';
+            return;
+        }
+        const fragment = document.createDocumentFragment();
+        let active = 0;
+        for (const link of links) {
+            if (!link.used) active += 1;
+            fragment.appendChild(buildRow(link));
+        }
+        els.tbody.appendChild(fragment);
+        els.stats.textContent = `نشط: ${active} | محروق: ${links.length - active} (آخر ${links.length} رابط)`;
+    }
+
+    async function fetchLinks() {
+        const body = await api('/admin/youtube/list');
+        const links = Array.isArray(body.links) ? body.links : [];
+        renderLinks(links);
+    }
+
+    async function refreshList() {
+        if (loading) return;
+        loading = true;
+        els.refreshBtn.disabled = true;
+        els.refreshIcon.classList.add('fa-spin');
+        try {
+            await fetchLinks();
+        } catch (err) {
+            handleApiFailure(err);
+        } finally {
+            loading = false;
+            els.refreshBtn.disabled = false;
+            els.refreshIcon.classList.remove('fa-spin');
+        }
+    }
+
+    // ---------- الإجراءات ----------
+    async function handleLogin(event) {
+        event.preventDefault();
+        if (loading) return;
+        const typed = els.password.value;
+        if (!typed) return showLoginError('أدخل رمز الدخول.');
+
+        loading = true;
+        adminPass = typed;
+        showLoginError('');
+        els.loginBtn.disabled = true;
+        els.loginBtn.textContent = 'جاري التحقق...';
+        els.loginHint.classList.remove('hidden');
+        try {
+            await fetchLinks();
+            els.password.value = '';
+            showDashboard();
+        } catch (err) {
+            adminPass = '';
+            showLoginError(ERROR_MESSAGES[err.kind] || ERROR_MESSAGES.server);
+        } finally {
+            loading = false;
+            els.loginBtn.disabled = false;
+            els.loginBtn.textContent = 'تسجيل الدخول';
+            els.loginHint.classList.add('hidden');
+        }
+    }
+
+    async function handleGenerate() {
+        if (loading) return;
+        const raw = Number(els.count.value);
+        if (!Number.isInteger(raw) || raw < MIN_COUNT || raw > MAX_COUNT) {
+            toast(`أدخل عدداً صحيحاً بين ${MIN_COUNT} و${MAX_COUNT}.`, 'error');
+            els.count.focus();
+            return;
+        }
+
+        loading = true;
+        els.generateBtn.disabled = true;
+        els.generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2" aria-hidden="true"></i> جاري التوليد...';
+        try {
+            const body = await api('/admin/youtube/generate_bulk', { count: raw });
+            const links = (Array.isArray(body.links) ? body.links : []).filter(isHttpsUrl);
+            els.newText.value = links.join('\n');
+            els.newPanel.classList.toggle('hidden', links.length === 0);
+            toast(`تم توليد ${links.length} رابط.`, 'success');
+            await fetchLinks();
+        } catch (err) {
+            handleApiFailure(err);
+        } finally {
+            loading = false;
+            els.generateBtn.disabled = false;
+            els.generateBtn.innerHTML = GENERATE_LABEL;
+        }
+    }
+
+    async function handleCopyAll() {
+        const ok = await copyText(els.newText.value);
+        toast(ok ? 'تم نسخ كل الروابط.' : 'تعذر النسخ، يرجى نسخها يدوياً', ok ? 'success' : 'error');
+    }
+
+    // ---------- الربط ----------
+    els.loginForm.addEventListener('submit', handleLogin);
+    els.logoutBtn.addEventListener('click', () => logout());
+    els.generateBtn.addEventListener('click', handleGenerate);
+    els.refreshBtn.addEventListener('click', refreshList);
+    els.copyAll.addEventListener('click', handleCopyAll);
+    ['click', 'keydown', 'touchstart'].forEach((evt) =>
+        document.addEventListener(evt, armIdleTimer, { passive: true }));
+
+    els.password.focus();
+})();
+</script>
+</body>
+</html>
