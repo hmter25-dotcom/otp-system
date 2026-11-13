@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>إليفارا | ELEVARAA</title>
+    <meta name="description" content="إليفارا: بوابتك للاشتراكات والخدمات الرقمية المميزة. تسليم فوري، ضمان، ودعم متواصل.">
+    <meta name="theme-color" content="#030816">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:title" content="إليفارا | ELEVARAA">
+    <meta property="og:description" content="بوابتك للاشتراكات والخدمات الرقمية المميزة">
+    <meta name="twitter:card" content="summary">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%230a1938'/%3E%3Cpath d='M18 44V30a14 14 0 0 1 28 0v16l-8-3V30a6 6 0 0 0-12 0v10z' fill='%2338bdf8'/%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #030816;
+            --bg-navy: #0a1938;
+            --primary-blue: #185adb;
+            --accent-cyan: #1ca3c4;
+            --glow-cyan: #38bdf8;
+            --text-white: #ffffff;
+            --text-soft: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-faint: #7487a3;
+            --font-ar: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+            --font-en: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            background: var(--bg-deep);
+        }
+
+        body {
+            font-family: var(--font-ar);
+            color: var(--text-white);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding:
+                max(28px, env(safe-area-inset-top))
+                max(18px, env(safe-area-inset-right))
+                max(28px, env(safe-area-inset-bottom))
+                max(18px, env(safe-area-inset-left));
+            background: radial-gradient(circle at 50% 0%, #0f295c 0%, var(--bg-navy) 45%, var(--bg-deep) 100%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* خلفية ثابتة لا تتأثر بالتمرير */
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            top: -140px;
+            left: 50%;
+            width: 440px;
+            height: 440px;
+            margin-left: -220px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.24) 0%, rgba(24, 90, 219, 0.09) 50%, transparent 70%);
+            filter: blur(24px);
+        }
+
+        .bg-orbit {
+            position: absolute;
+            bottom: -300px;
+            left: 50%;
+            width: 680px;
+            height: 680px;
+            margin-left: -340px;
+            border: 1px solid rgba(56, 189, 248, 0.10);
+            border-radius: 50%;
+        }
+
+        .bg-orbit::before {
+            content: '';
+            position: absolute;
+            inset: 70px;
+            border: 1px solid rgba(56, 189, 248, 0.06);
+            border-radius: 50%;
+        }
+
+        .bg-orbit::after {
+            content: '';
+            position: absolute;
+            inset: 150px;
+            border: 1px solid rgba(56, 189, 248, 0.04);
+            border-radius: 50%;
+        }
+
+        /* البطاقة الزجاجية */
+        .glass-card {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 410px;
+            background: linear-gradient(180deg, rgba(15, 32, 67, 0.78) 0%, rgba(7, 16, 36, 0.92) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-top-color: rgba(125, 211, 252, 0.42);
+            border-radius: 32px;
+            padding: 42px 26px 30px;
+            text-align: center;
+            box-shadow:
+                0 28px 64px rgba(0, 0, 0, 0.62),
+                inset 0 1px 24px rgba(56, 189, 248, 0.06);
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .glass-card {
+                background: linear-gradient(180deg, rgba(15, 32, 67, 0.62) 0%, rgba(7, 16, 36, 0.84) 100%);
+                -webkit-backdrop-filter: blur(24px) saturate(140%);
+                backdrop-filter: blur(24px) saturate(140%);
+            }
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(22px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* الشعار والمدار */
+        .logo-container {
+            position: relative;
+            width: 132px;
+            height: 132px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orbit-ring-static {
+            position: absolute;
+            inset: -10px;
+            border: 1.5px dashed rgba(56, 189, 248, 0.38);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .orbit-ring-spin {
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: rotateOrbit 16s linear infinite;
+        }
+
+        .orbit-ring-spin::after {
+            content: '';
+            position: absolute;
+            top: -4.5px;
+            left: 50%;
+            width: 9px;
+            height: 9px;
+            margin-left: -4.5px;
+            background: var(--glow-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--glow-cyan), 0 0 26px rgba(56, 189, 248, 0.8);
+        }
+
+        @keyframes rotateOrbit { to { transform: rotate(360deg); } }
+
+        .logo-circle {
+            width: 124px;
+            height: 124px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid var(--glow-cyan);
+            box-shadow:
+                0 0 0 7px rgba(56, 189, 248, 0.10),
+                0 0 38px rgba(28, 163, 196, 0.46);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 10px;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        @media (hover: hover) {
+            .logo-circle:hover {
+                transform: scale(1.04);
+                box-shadow:
+                    0 0 0 7px rgba(56, 189, 248, 0.16),
+                    0 0 48px rgba(56, 189, 248, 0.66);
+            }
+        }
+
+        .logo-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* الأسماء */
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            margin-bottom: 6px;
+        }
+
+        .brand-ar {
+            font-size: clamp(30px, 9vw, 34px);
+            font-weight: 900;
+            line-height: 1.25;
+            color: #ffffff;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.42);
+        }
+
+        .verified-badge {
+            width: 24px;
+            height: 24px;
+            flex: none;
+            display: block;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.55));
+        }
+
+        .brand-en {
+            display: block;
+            direction: ltr;
+            unicode-bidi: isolate;
+            font-family: var(--font-en);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.36em;
+            margin: 0 0 16px;
+            padding-left: 0.36em; /* يعوّض مسافة الحرف الأخير ليبقى النص في المنتصف */
+            color: #7dd3fc;
+            background: linear-gradient(90deg, #7dd3fc 0%, #38bdf8 50%, #93c5fd 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-desc {
+            font-size: 15.5px;
+            font-weight: 500;
+            line-height: 1.7;
+            color: var(--text-soft);
+            max-width: 30ch;
+            margin: 0 auto 22px;
+        }
+
+        /* شارات الثقة */
+        .trust-badges {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.22);
+            color: #e2e8f0;
+            font-size: 12.5px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .badge-pill svg {
+            width: 14px;
+            height: 14px;
+            flex: none;
+            color: var(--glow-cyan);
+        }
+
+        /* الزر الرئيسي */
+        .btn-primary {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 64px;
+            margin-bottom: 16px;
+            padding: 18px 24px;
+            border-radius: 18px;
+            border: 1.5px solid rgba(125, 211, 252, 0.65);
+            background: linear-gradient(135deg, #1ca3c4 0%, #185adb 55%, #0f388a 100%);
+            color: #ffffff;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 20px;
+            font-weight: 800;
+            box-shadow:
+                0 14px 32px rgba(24, 90, 219, 0.46),
+                inset 0 1px 1px rgba(255, 255, 255, 0.36);
+            overflow: hidden;
+            isolation: isolate;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 55%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+            transform: skewX(-25deg);
+            animation: shimmer 4s ease-in-out 1.4s infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes shimmer {
+            0%   { left: -120%; }
+            35%  { left: 140%; }
+            100% { left: 140%; }
+        }
+
+        .btn-primary .btn-arrow {
+            width: 22px;
+            height: 22px;
+            flex: none;
+            transition: transform 0.3s ease;
+        }
+
+        @media (hover: hover) {
+            .btn-primary:hover {
+                transform: translateY(-3px);
+                border-color: #ffffff;
+                box-shadow:
+                    0 18px 40px rgba(56, 189, 248, 0.55),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            }
+            .btn-primary:hover .btn-arrow { transform: translateX(-5px); }
+        }
+
+        .btn-primary:active { transform: translateY(0) scale(0.985); }
+
+        /* زر المشاركة */
+        .btn-share {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 11px 24px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: rgba(15, 23, 42, 0.65);
+            color: var(--text-soft);
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        }
+
+        .btn-share svg { width: 16px; height: 16px; flex: none; }
+
+        @media (hover: hover) {
+            .btn-share:hover {
+                background: rgba(30, 41, 59, 0.92);
+                border-color: rgba(56, 189, 248, 0.55);
+                color: #ffffff;
+            }
+        }
+
+        .btn-primary:focus-visible,
+        .btn-share:focus-visible {
+            outline: 3px solid #ffffff;
+            outline-offset: 4px;
+        }
+
+        /* إشعار */
+        .toast {
+            position: fixed;
+            bottom: max(28px, env(safe-area-inset-bottom));
+            left: 50%;
+            max-width: calc(100vw - 36px);
+            transform: translateX(-50%) translateY(20px);
+            padding: 11px 22px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #185adb 0%, #1ca3c4 100%);
+            border: 1px solid rgba(125, 211, 252, 0.6);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .footer {
+            position: relative;
+            z-index: 2;
+            margin-top: 26px;
+            font-size: 12.5px;
+            font-weight: 500;
+            line-height: 1.7;
+            color: var(--text-faint);
+            text-align: center;
+        }
+
+        .footer bdi { font-family: var(--font-en); letter-spacing: 0.08em; }
+
+        @media (max-width: 360px) {
+            .glass-card { padding: 36px 18px 26px; border-radius: 28px; }
+            .btn-primary { font-size: 18px; min-height: 58px; }
+        }
+
+        @media (max-height: 680px) {
+            body { justify-content: flex-start; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+            .orbit-ring-spin { display: none; }
+        }
+
+        @media (forced-colors: active) {
+            .btn-primary, .btn-share, .glass-card { border: 2px solid CanvasText; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="backdrop" aria-hidden="true">
+        <div class="ambient-glow"></div>
+        <div class="bg-orbit"></div>
+    </div>
+
+    <main class="glass-card">
+
+        <div class="logo-container">
+            <div class="orbit-ring-static" aria-hidden="true"></div>
+            <div class="orbit-ring-spin" aria-hidden="true"></div>
+            <div class="logo-circle">
+                <svg class="logo-svg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شعار إليفارا">
+                    <defs>
+                        <linearGradient id="archGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0d2863"/>
+                            <stop offset="55%" stop-color="#1552ad"/>
+                            <stop offset="100%" stop-color="#1b8ec4"/>
+                        </linearGradient>
+                        <linearGradient id="cyanFacet" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#167bb3"/>
+                            <stop offset="100%" stop-color="#20a9c9"/>
+                        </linearGradient>
+                        <linearGradient id="swooshGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#0d265c"/>
+                            <stop offset="100%" stop-color="#1769ad"/>
+                        </linearGradient>
+                        <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#0e2963"/>
+                            <stop offset="60%" stop-color="#1557a8"/>
+                            <stop offset="100%" stop-color="#1f85cc"/>
+                        </linearGradient>
+                    </defs>
+
+                    <path d="M 348 492 L 348 401 A 154 154 0 0 1 656 401 L 656 613 L 569 585 L 569 401 A 65.5 65.5 0 0 0 438 401 L 438 518 Z" fill="url(#archGrad)"/>
+                    <path d="M 348 525 L 438 552 L 438 588 L 348 615 Z" fill="#0d2863"/>
+                    <polygon points="569,585 656,515 656,613" fill="url(#cyanFacet)"/>
+                    <path d="M 322 349 C 228 402, 240 478, 548 566 C 565 570, 572 544, 553 538 C 302 465, 260 404, 322 349 Z" fill="url(#swooshGrad)" stroke="#ffffff" stroke-width="10" stroke-linejoin="round"/>
+                    <path d="M 658 340 C 765 362, 785 425, 673 456 L 693 426 C 735 408, 725 368, 658 340 Z" fill="#209cc2"/>
+                    <circle cx="330" cy="305" r="22" fill="#0e2a66"/>
+                    <circle cx="692" cy="488" r="20" fill="#1a7ab5"/>
+                    <text x="500" y="748" text-anchor="middle" font-family="'Montserrat', 'Segoe UI', Arial, sans-serif" font-size="148" font-weight="700" fill="url(#textGrad)" letter-spacing="-2">elevara</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="title-row">
+            <h1 class="brand-ar">إليفارا</h1>
+            <svg class="verified-badge" viewBox="0 0 24 24" role="img" aria-label="متجر موثّق" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="vGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="100%" stop-color="#1d4ed8"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="12" cy="12" r="12" fill="url(#vGrad)"/>
+                <path d="M7 12.5l3.2 3.2L17 8.9" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+
+        <p class="brand-en" lang="en">ELEVARAA</p>
+
+        <p class="brand-desc">بوابتك للاشتراكات والخدمات الرقمية المميزة</p>
+
+        <ul class="trust-badges">
+            <li class="badge-pill">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M13.2 2L4.5 13.4a.6.6 0 0 0 .48.96H10l-1.2 7.1a.4.4 0 0 0 .72.3L19.5 10.6a.6.6 0 0 0-.48-.96H14l1.2-7.3a.4.4 0 0 0-.72-.28z"/></svg>
+                <span>تسليم فوري</span>
+            </li>
+            <li class="badge-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7.5 3v5.6c0 4.6-3.1 8.1-7.5 9.4-4.4-1.3-7.5-4.8-7.5-9.4V6z"/><path d="M8.8 12l2.3 2.3 4.2-4.4"/></svg>
+                <span>ضمان ذهبي</span>
+            </li>
+            <li class="badge-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/></svg>
+                <span>دعم متواصل</span>
+            </li>
+        </ul>
+
+        <a href="https://elevaraa1.shop" class="btn-primary" target="_blank" rel="noopener noreferrer">
+            <span>تصفّح المتجر</span>
+            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+        </a>
+
+        <button type="button" class="btn-share" id="share-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span>شارك الصفحة</span>
+        </button>
+
+    </main>
+
+    <footer class="footer">
+        © 2026 جميع الحقوق محفوظة لمتجر إليفارا | <bdi>ELEVARAA</bdi>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var btn = document.getElementById('share-btn');
+            var toast = document.getElementById('toast');
+            var timer = null;
+
+            function notify(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                clearTimeout(timer);
+                timer = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+            }
+
+            function legacyCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+                document.body.appendChild(ta);
+                ta.select();
+                var ok = false;
+                try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+                document.body.removeChild(ta);
+                return ok;
+            }
+
+            function copyLink(url) {
+                var done = function (ok) {
+                    notify(ok ? 'تم نسخ رابط الصفحة بنجاح' : 'تعذّر النسخ، انسخ الرابط من شريط العنوان');
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(url).then(
+                        function () { done(true); },
+                        function () { done(legacyCopy(url)); }
+                    );
+                } else {
+                    done(legacyCopy(url));
+                }
+            }
+
+            btn.addEventListener('click', function () {
+                var url = window.location.href;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'متجر إليفارا | ELEVARAA',
+                        text: 'بوابتك للاشتراكات والخدمات الرقمية المميزة',
+                        url: url
+                    }).catch(function (err) {
+                        if (err && err.name !== 'AbortError') { copyLink(url); }
+                    });
+                } else {
+                    copyLink(url);
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
