@@ -1,7 +1,9 @@
-"""Elevaraa Core Unified Server (API Mode for Custom Domain) - hardened build.
+"""Elevaraa Core Unified Server (API Mode for Custom Domain) - hardened build v2.
 
 Run in production (single process, many threads, keeps in-memory limiters accurate):
     gunicorn -w 1 --threads 8 -b 0.0.0.0:$PORT server:app
+
+IMPORTANT: DATA_DIR must point to a PERSISTENT disk/volume, otherwise data is lost on redeploy.
 """
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import sqlite3
 import tempfile
 import threading
@@ -79,9 +82,11 @@ class Settings:
     imap_server: str = "imap.gmail.com"
     imap_port: int = 993
     imap_timeout: int = 15
+    data_dir: str = "."
     blocklist_file: str = "blocked_subs.json"
     mapping_file: str = "sub_mappings.json"
     youtube_db: str = "youtube_links.db"
+    backup_dir: str = "backups"
     netflix_api: str = "https://tv.ostories.me/api/dealer-subscriptions"
     netflix_timeout: int = 4
 
@@ -91,16 +96,19 @@ class Settings:
     allowed_origins: tuple[str, ...] = ("*",)
     trust_proxy: bool = True
 
-    # New (all optional, defaults keep the old behaviour)
     rate_limit_per_min: int = 120      # public endpoints, per IP. 0 = disabled
-    otp_max_age: int = 0               # seconds; 0 = don't check email age
+    otp_max_age: int = 600             # seconds; ignore OTP emails older than this. 0 = no check
     otp_cache_ttl: int = 2             # seconds; coalesces polling into one IMAP hit
     imap_max_connections: int = 4      # concurrent IMAP sessions per process
+
+    backup_interval: int = 3600        # seconds between automatic snapshots. 0 = disabled
+    backup_keep: int = 48              # number of snapshots to keep
 
     @classmethod
     def from_env(cls) -> "Settings":
         data_dir = _env("DATA_DIR", ".")
         os.makedirs(data_dir, exist_ok=True)
+        backup_dir = _env("BACKUP_DIR", os.path.join(data_dir, "backups"))
         origins = tuple(o.strip() for o in _env("ALLOWED_ORIGINS", "*").split(",") if o.strip())
         return cls(
             admin_password=_env("ADMIN_PASSWORD"),
@@ -112,18 +120,22 @@ class Settings:
             youtube_email=_env("YOUTUBE_EMAIL"),
             youtube_pass=_env("YOUTUBE_PASS"),
             imap_timeout=_env_int("IMAP_TIMEOUT", 15),
+            data_dir=data_dir,
             blocklist_file=os.path.join(data_dir, "blocked_subs.json"),
             mapping_file=os.path.join(data_dir, "sub_mappings.json"),
             youtube_db=os.path.join(data_dir, "youtube_links.db"),
+            backup_dir=backup_dir,
             netflix_timeout=_env_int("NETFLIX_TIMEOUT", 4),
             otp_link_base=_env("OTP_LINK_BASE", cls.otp_link_base),
             yt_link_base=_env("YT_LINK_BASE", cls.yt_link_base),
             allowed_origins=origins or ("*",),
             trust_proxy=_env("TRUST_PROXY", "1") != "0",
             rate_limit_per_min=_env_int("RATE_LIMIT_PER_MIN", 120),
-            otp_max_age=_env_int("OTP_MAX_AGE", 0),
+            otp_max_age=_env_int("OTP_MAX_AGE", 600),
             otp_cache_ttl=_env_int("OTP_CACHE_TTL", 2),
             imap_max_connections=max(1, _env_int("IMAP_MAX_CONNECTIONS", 4)),
+            backup_interval=_env_int("BACKUP_INTERVAL", 3600),
+            backup_keep=max(1, _env_int("BACKUP_KEEP", 48)),
         )
 
     @property
@@ -179,6 +191,14 @@ except ImportError:
 except Exception:
     log.exception("Failed to register canva blueprint")
 
+# --- ربط بوت التيليجرام الجديد ---
+try:
+    from elevaraa_otp_bot import tg_bp, start_telegram_watcher
+    app.register_blueprint(tg_bp)
+    start_telegram_watcher()
+except Exception:
+    log.exception("Telegram bot module import error")
+
 
 def error(message: str, status: int):
     return jsonify({"status": "error", "message": message}), status
@@ -197,6 +217,8 @@ def _security_headers(resp):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
     resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    if request.is_secure:
+        resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     if request.path.startswith(("/get-", "/api/", "/admin/")):
         resp.headers["Cache-Control"] = "no-store"
     return resp
@@ -225,7 +247,6 @@ class SlidingWindowLimiter:
         return events
 
     def _maybe_sweep(self, now: float) -> None:
-        # Keeps memory bounded when many one-off IPs hit the service.
         self._ops += 1
         if self._ops % 512:
             return
@@ -244,7 +265,6 @@ class SlidingWindowLimiter:
             self._maybe_sweep(now)
 
     def hit(self, key: str) -> bool:
-        """Atomically check and record. Returns True if the request is allowed."""
         with self._lock:
             now = time.monotonic()
             if len(self._prune(key, now) or ()) >= self.max_events:
@@ -258,7 +278,7 @@ class SlidingWindowLimiter:
             self._events.pop(key, None)
 
 
-FailureLimiter = SlidingWindowLimiter  # backwards-compatible name
+FailureLimiter = SlidingWindowLimiter
 admin_limiter = SlidingWindowLimiter(max_events=10, window_seconds=300)
 yt_limiter = SlidingWindowLimiter(max_events=30, window_seconds=600)
 
@@ -268,8 +288,6 @@ def client_ip() -> str:
 
 
 def rate_limited(limiter: SlidingWindowLimiter | None) -> Callable:
-    """Per-IP request throttle for public endpoints."""
-
     def decorator(view: Callable) -> Callable:
         @wraps(view)
         def wrapper(*args: Any, **kwargs: Any):
@@ -308,11 +326,12 @@ def admin_required(unauthorized_message: str) -> Callable:
             if not isinstance(data, dict):
                 data = {}
             supplied = str(data.get("password") or request.headers.get("X-Admin-Password", ""))
-            # Compare fixed-length digests so neither content nor length leaks via timing.
             if not hmac.compare_digest(_digest(supplied), _digest(settings.admin_password)):
                 admin_limiter.record(ip)
+                log.warning("ADMIN auth failed ip=%s path=%s", ip, request.path)
                 return error(unauthorized_message, 401)
             admin_limiter.reset(ip)
+            log.info("ADMIN action ip=%s path=%s", ip, request.path)
             return view(data, *args, **kwargs)
 
         return wrapper
@@ -321,11 +340,28 @@ def admin_required(unauthorized_message: str) -> Callable:
 
 
 # --------------------------------------------------------------------------- #
-# JSON storage (atomic, locked, never silently loses data)
+# JSON storage (atomic write + .bak copy + auto-restore + dir fsync)
 # --------------------------------------------------------------------------- #
+def _fsync_dir(directory: str) -> None:
+    if os.name == "nt":
+        return
+    try:
+        fd = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    except OSError:
+        pass
+
+
 class JsonStore:
     def __init__(self, path: str, default: Any):
         self.path, self.default, self._lock = path, default, threading.Lock()
+
+    @property
+    def bak_path(self) -> str:
+        return f"{self.path}.bak"
 
     @contextmanager
     def _guard(self) -> Iterator[None]:
@@ -340,8 +376,14 @@ class JsonStore:
                 finally:
                     fcntl.flock(lock_file, fcntl.LOCK_UN)
 
+    def _load_file(self, path: str) -> Any:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, type(self.default)):
+            raise ValueError(f"unexpected data type in {path}")
+        return data
+
     def _quarantine(self) -> None:
-        """Move an unreadable file aside so the next write can't destroy evidence."""
         backup = f"{self.path}.corrupt-{int(time.time())}"
         try:
             os.replace(self.path, backup)
@@ -349,23 +391,30 @@ class JsonStore:
         except OSError:
             log.exception("Could not quarantine corrupt store %s", self.path)
 
+    def _restore_backup(self) -> Any | None:
+        try:
+            data = self._load_file(self.bak_path)
+        except (OSError, ValueError):
+            return None
+        log.error("Store %s restored from %s", self.path, self.bak_path)
+        try:
+            self._write(data, make_backup=False)
+        except Exception:
+            log.exception("Could not rewrite restored store %s", self.path)
+        return data
+
     def _read(self) -> Any:
         try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            return self._load_file(self.path)
         except FileNotFoundError:
-            return copy.deepcopy(self.default)
+            pass
         except (OSError, ValueError):
             log.exception("Failed reading %s", self.path)
             self._quarantine()
-            return copy.deepcopy(self.default)
-        if not isinstance(data, type(self.default)):
-            log.error("Unexpected data type in %s", self.path)
-            self._quarantine()
-            return copy.deepcopy(self.default)
-        return data
+        restored = self._restore_backup()
+        return restored if restored is not None else copy.deepcopy(self.default)
 
-    def _write(self, data: Any) -> None:
+    def _write(self, data: Any, make_backup: bool = True) -> None:
         directory = os.path.dirname(os.path.abspath(self.path)) or "."
         tmp_name = None
         try:
@@ -376,7 +425,13 @@ class JsonStore:
                 json.dump(data, tmp, ensure_ascii=False)
                 tmp.flush()
                 os.fsync(tmp.fileno())
+            if make_backup and os.path.exists(self.path):
+                try:
+                    shutil.copy2(self.path, self.bak_path)
+                except OSError:
+                    log.exception("Could not refresh backup for %s", self.path)
             os.replace(tmp_name, self.path)
+            _fsync_dir(directory)
         except Exception:
             log.exception("Failed writing %s", self.path)
             if tmp_name:
@@ -384,7 +439,7 @@ class JsonStore:
                     os.unlink(tmp_name)
                 except OSError:
                     pass
-            raise  # caller must know the write failed (no false "success")
+            raise
 
     def load(self) -> Any:
         with self._guard():
@@ -398,8 +453,13 @@ class JsonStore:
     def transaction(self) -> Iterator[Any]:
         with self._guard():
             data = self._read()
-            yield data  # an exception here skips the write
+            yield data  # an exception here skips the write -> no partial state
             self._write(data)
+
+    def snapshot_to(self, dest_dir: str) -> None:
+        with self._guard():
+            if os.path.exists(self.path):
+                shutil.copy2(self.path, os.path.join(dest_dir, os.path.basename(self.path)))
 
 
 blocked_store, mappings_store = JsonStore(settings.blocklist_file, []), JsonStore(settings.mapping_file, {})
@@ -430,6 +490,8 @@ def yt_db() -> Iterator[sqlite3.Connection]:
     conn = sqlite3.connect(settings.youtube_db, timeout=10)
     conn.row_factory = sqlite3.Row
     try:
+        conn.execute("PRAGMA busy_timeout=10000")
+        conn.execute("PRAGMA synchronous=FULL")
         yield conn
         conn.commit()
     except Exception:
@@ -452,7 +514,6 @@ init_yt_db()
 
 
 def claim_yt_token(token: str) -> bool:
-    # Single atomic UPDATE: two simultaneous requests can never both claim a token.
     with yt_db() as conn:
         return conn.execute("UPDATE links SET used = 1 WHERE token = ? AND used = 0", (token,)).rowcount == 1
 
@@ -468,15 +529,66 @@ def create_yt_tokens(count: int) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
+# Automatic snapshots (JSON files + consistent SQLite copy)
+# --------------------------------------------------------------------------- #
+_backup_lock = threading.Lock()
+
+
+def snapshot_data() -> str | None:
+    """Create a timestamped snapshot folder; prune old ones. Returns folder name."""
+    with _backup_lock:
+        stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+        dest = os.path.join(settings.backup_dir, stamp)
+        try:
+            os.makedirs(dest, exist_ok=True)
+            blocked_store.snapshot_to(dest)
+            mappings_store.snapshot_to(dest)
+            if os.path.exists(settings.youtube_db):
+                src = sqlite3.connect(settings.youtube_db, timeout=10)
+                dst = sqlite3.connect(os.path.join(dest, "youtube_links.db"))
+                try:
+                    src.backup(dst)  # safe while the DB is in use
+                finally:
+                    dst.close()
+                    src.close()
+            snaps = sorted(
+                d for d in os.listdir(settings.backup_dir)
+                if os.path.isdir(os.path.join(settings.backup_dir, d))
+            )
+            for old in snaps[: -settings.backup_keep]:
+                shutil.rmtree(os.path.join(settings.backup_dir, old), ignore_errors=True)
+            return stamp
+        except Exception:
+            log.exception("Snapshot failed")
+            return None
+
+
+_stop_backup = threading.Event()
+
+
+def _backup_loop() -> None:
+    while not _stop_backup.is_set():
+        snapshot_data()
+        if _stop_backup.wait(settings.backup_interval):
+            break
+
+
+def start_backup_thread() -> None:
+    if settings.backup_interval <= 0:
+        return
+    threading.Thread(target=_backup_loop, name="backup", daemon=True).start()
+    atexit.register(_stop_backup.set)
+
+
+# --------------------------------------------------------------------------- #
 # IMAP helpers
 # --------------------------------------------------------------------------- #
-IMAP_ERRORS = (IMAP4.error, OSError, TimeoutError)  # OSError covers ssl/socket errors
+IMAP_ERRORS = (IMAP4.error, OSError, TimeoutError)
 _imap_slots = threading.BoundedSemaphore(settings.imap_max_connections)
 
 
 @contextmanager
 def imap_session(account: str, password: str) -> Iterator[IMAP4_SSL]:
-    # Gmail caps concurrent connections; queue briefly instead of failing under load.
     if not _imap_slots.acquire(timeout=settings.imap_timeout):
         raise TimeoutError("IMAP busy")
     mail = None
@@ -551,7 +663,7 @@ def _is_too_old(msg: Message) -> bool:
         if sent.tzinfo is None:
             sent = sent.replace(tzinfo=datetime.timezone.utc)
     except Exception:
-        return False  # unknown date: don't discard a possibly valid code
+        return False
     age = (datetime.datetime.now(datetime.timezone.utc) - sent).total_seconds()
     return age > settings.otp_max_age
 
@@ -581,18 +693,22 @@ def find_osn_otp(mail: IMAP4_SSL) -> str | None:
     return None
 
 
-# Short-lived cache so many clients polling /get-otp share one IMAP round trip.
 _otp_cache: dict[str, Any] = {"value": None, "ts": 0.0}
 _otp_cache_lock = threading.Lock()
 
 
 def _cached_osn_otp() -> str | None:
     ttl = settings.otp_cache_ttl
-    with _otp_cache_lock:  # also serialises concurrent misses into a single fetch
+    with _otp_cache_lock:
         if ttl > 0 and time.monotonic() - _otp_cache["ts"] < ttl:
             return _otp_cache["value"]
-        with imap_session(settings.email_account, settings.email_password) as mail:
-            value = find_osn_otp(mail)
+        try:
+            with imap_session(settings.email_account, settings.email_password) as mail:
+                value = find_osn_otp(mail)
+        except IMAP_ERRORS:
+            # negative-cache failures so a dead IMAP doesn't stall every request
+            _otp_cache.update(value=None, ts=time.monotonic())
+            raise
         _otp_cache.update(value=value, ts=time.monotonic())
         return value
 
@@ -668,7 +784,7 @@ def get_netflix():
         "user-agent": "Mozilla/5.0",
         "x-api-key": bk,
     }
-    wait = settings.netflix_timeout * 3 + 2  # covers the 2 retries configured on the session
+    wait = settings.netflix_timeout * 3 + 2
     futures = [(ep, _netflix_pool.submit(_fetch_netflix, ep, headers)) for ep in NETFLIX_ENDPOINTS]
     for ep, future in futures:
         try:
@@ -789,8 +905,6 @@ def admin_revoke_and_issue(data: dict):
         return error("الرابط مطلوب", 400)
     new_sub_id = str(uuid.uuid4())
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %I:%M %p")
-    # The inner store (mappings) is written first: if the second write fails we are left
-    # with a harmless unused mapping, never a revoked link without a replacement.
     with blocked_store.transaction() as blocked, mappings_store.transaction() as mappings:
         original_target = mappings.get(current_sub, current_sub)
         blocked[:] = [b for b in blocked if blocked_id(b) != current_sub]
@@ -821,6 +935,15 @@ def admin_list_blocked(data: dict):
     return jsonify({"status": "success", "blocked": load_blocked()})
 
 
+@app.route("/admin/backup", methods=["POST"])
+@admin_required("غير مصرح")
+def admin_backup(data: dict):
+    name = snapshot_data()
+    if not name:
+        return error("فشل النسخ الاحتياطي", 500)
+    return jsonify({"status": "success", "snapshot": name})
+
+
 @app.route("/", methods=["GET"])
 def health_check():
     return jsonify({"status": "active", "service": "Elevaraa Core Unified API"})
@@ -840,9 +963,14 @@ def _startup_checks() -> None:
         log.warning("ALLOWED_ORIGINS is '*'. Restrict it to your frontend domain in production.")
     if settings.admin_configured and len(settings.admin_password) < 12:
         log.warning("ADMIN_PASSWORD is short; use at least 12 characters.")
+    if not os.access(settings.data_dir, os.W_OK):
+        log.error("DATA_DIR %s is not writable - data will NOT be saved!", settings.data_dir)
+    if settings.data_dir in (".", ""):
+        log.warning("DATA_DIR is the working directory. Use a persistent volume to avoid data loss on redeploy.")
 
 
 _startup_checks()
+start_backup_thread()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=_env_int("PORT", 5000))
