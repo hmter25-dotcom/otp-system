@@ -24,10 +24,10 @@ import re
 import tempfile
 import threading
 import time
+from datetime import datetime, timezone
 from email import message_from_bytes
 from email.header import decode_header
 from email.utils import parsedate_to_datetime
-from datetime import datetime, timezone
 from imaplib import IMAP4_SSL
 
 import requests
@@ -87,7 +87,7 @@ if _enc_key:
         from cryptography.fernet import Fernet, InvalidToken
 
         _fernet = Fernet(_enc_key.encode())
-    except Exception as exc:  # مكتبة غير مثبتة أو مفتاح خاطئ
+    except Exception as exc:
         raise RuntimeError(f"MAIL_ENC_KEY invalid or cryptography missing: {exc}")
 
 
@@ -194,7 +194,6 @@ def _tg_api(method, payload):
                 return None
             return resp.json()
         except requests.RequestException as exc:
-            # لا نسجّل الـ URL لأنه يحتوي التوكن
             log.error("Telegram %s network error: %s", method, type(exc).__name__)
             return None
     return None
@@ -360,7 +359,7 @@ def _is_too_old(msg):
             sent = sent.replace(tzinfo=timezone.utc)
         return (datetime.now(timezone.utc) - sent).total_seconds() > MAX_AGE_SECONDS
     except Exception:
-        return False  # تاريخ غير مفهوم: لا نتجاهل الرسالة
+        return False
 
 
 # ───────────────────────── فحص البريد ─────────────────────────
@@ -369,7 +368,6 @@ def check_all_inboxes(manual_chat_id=None):
     if not admin_id:
         return 0
 
-    # يمنع تداخل الفحص اليدوي مع فحص الخلفية (وبالتالي الإرسال المكرر)
     if not _check_lock.acquire(timeout=60):
         log.warning("Inbox check skipped: another check is still running")
         return 0
@@ -413,7 +411,7 @@ def check_all_inboxes(manual_chat_id=None):
                             if send_tg_message(admin_id, text, buttons=buttons):
                                 new_found += 1
                             else:
-                                delivered = False  # نعيد المحاولة في الدورة القادمة
+                                delivered = False
 
                     if delivered:
                         processed.add(key)
@@ -451,7 +449,7 @@ def _test_imap_login(email_addr, password, host):
 
 
 # ───────────────────────── أوامر البوت ─────────────────────────
-_failed_activations = {}  # chat_id -> (count, first_ts)
+_failed_activations = {}
 
 
 def _activation_blocked(chat_id):
@@ -474,7 +472,6 @@ def _handle_manual_check(chat_id):
 
 
 def _handle_add_accounts(chat_id, message_id, text):
-    # نحذف رسالة المستخدم فوراً لأنها تحتوي كلمات سر
     if message_id:
         _tg_api("deleteMessage", {"chat_id": chat_id, "message_id": message_id})
 
@@ -525,7 +522,6 @@ def telegram_webhook():
 
     admin_id = get_admin_chat_id()
 
-    # التفعيل: مسموح فقط إن لم يوجد أدمن، أو من الأدمن نفسه
     if text.startswith("/activate"):
         if admin_id and chat_id != admin_id:
             send_tg_message(chat_id, "🔒 البوت مرتبط بحساب آخر.")
@@ -560,7 +556,6 @@ def telegram_webhook():
         )
 
     elif text == "🔍 فحص الرسائل الآن":
-        # في خيط منفصل حتى لا ينتهي وقت الويب هوك فيعيد تيليجرام الإرسال
         threading.Thread(target=_handle_manual_check, args=(chat_id,), daemon=True).start()
 
     elif text == "📋 إيميلاتي المربوطة":
@@ -600,8 +595,8 @@ def _background_watcher():
                 check_all_inboxes()
             backoff = POLL_INTERVAL
         except Exception:
-            log.exception("Watcher loop error")
-            backoff = min(backoff * 2, 300)  # تراجع تدريجي عند الأخطاء المتكررة
+            log.exception("loop error")
+            backoff = min(backoff * 2, 300)
         _stop_event.wait(backoff)
 
 
