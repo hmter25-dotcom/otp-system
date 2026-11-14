@@ -8,8 +8,9 @@ Elevaraa Telegram bot: يراقب صناديق البريد ويرسل أكوا�
     DISNEY_EMAIL_PASSWORD   App Password للإيميل الرئيسي (إجباري)
 
 اختيارية:
+    PUBLIC_URL              رابط السيرفر العام (وإلا يُستخدم RENDER_EXTERNAL_URL) لربط الويب هوك تلقائياً
     TG_ADMIN_ID             معرّف الأدمن (بدل التفعيل بالأمر)
-    TG_WEBHOOK_SECRET       secret_token الذي تمرره لـ setWebhook (موصى به بشدة)
+    TG_WEBHOOK_SECRET       secret_token الذي يُمرَّر لـ setWebhook (موصى به بشدة)
     MAIL_ENC_KEY            مفتاح Fernet لتشفير كلمات سر الإيميلات المحفوظة
     DATA_DIR                مجلد حفظ الملفات (الافتراضي: .)
     MAIL_MAX_AGE_SECONDS    تجاهل الرسائل الأقدم من هذه المدة (الافتراضي 1800)
@@ -47,7 +48,8 @@ def _require_env(name):
     return value
 
 
-BOT_TOKEN = _require_env("TG_BOT_TOKEN")
+# strip الإضافي يزيل علامات الاقتباس إن لُصقت مع التوكن بالخطأ
+BOT_TOKEN = _require_env("TG_BOT_TOKEN").strip('"').strip("'").strip()
 ACTIVATION_PIN = _require_env("TG_ACTIVATION_PIN")
 MASTER_EMAIL = _require_env("DISNEY_EMAIL_ACCOUNT").lower()
 MASTER_PASS = _require_env("DISNEY_EMAIL_PASSWORD")
@@ -600,12 +602,29 @@ def _background_watcher():
         _stop_event.wait(backoff)
 
 
+def _register_webhook():
+    """يتحقق من التوكن ثم يربط الويب هوك تلقائياً عند كل إقلاع."""
+    base = (os.environ.get("PUBLIC_URL") or os.environ.get("RENDER_EXTERNAL_URL", "")).strip().rstrip("/")
+    if not base:
+        log.error("PUBLIC_URL / RENDER_EXTERNAL_URL غير موجود، لم يُربط الويب هوك.")
+        return
+    if _tg_api("getMe", {}) is None:
+        log.error("فشل التحقق من التوكن (401 غالباً). أعد نسخه من BotFather بزر Copy.")
+        return
+    payload = {"url": f"{base}/telegram-webhook", "allowed_updates": ["message"]}
+    if WEBHOOK_SECRET:
+        payload["secret_token"] = WEBHOOK_SECRET
+    result = _tg_api("setWebhook", payload)
+    log.info("setWebhook result: %s", "OK" if result else "FAILED")
+
+
 def start_telegram_watcher():
     global _watcher_started
     with _watcher_guard:
         if _watcher_started:
             return
         _watcher_started = True
+        threading.Thread(target=_register_webhook, name="tg-webhook", daemon=True).start()
         threading.Thread(target=_background_watcher, name="tg-watcher", daemon=True).start()
 
 
