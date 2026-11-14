@@ -300,6 +300,32 @@ def _pick_link(links, keywords):
     return None
 
 
+ANCHOR_RE = re.compile(r'<a\b[^>]*?href=["\'](https?://[^"\'\s>]+)["\'][^>]*>(.*?)</a>', re.I | re.S)
+SHAHID_BUTTON_WORDS = ("كلمة المرور", "كلمة السر", "غيّر", "غير ", "تغيير", "reset", "password")
+
+
+def _pick_button_link(html_content, words):
+    """يختار الرابط حسب نص الزر (مثل: غيّر كلمة المرور) لأن روابط التتبع لا تحمل كلمات واضحة."""
+    for href, inner in ANCHOR_RE.findall(html_content):
+        label = _html_to_text(inner).strip().lower()
+        href = html.unescape(href)
+        if href.lower().startswith("https://") and any(w in label for w in words):
+            return href
+    return None
+
+
+def _first_clean_link(links):
+    """احتياطي أخير: أول رابط مفيد (ليس صورة وليس رابط مساعدة/خصوصية)."""
+    for link in links:
+        low = link.lower()
+        if any(w in low for w in IGNORED_LINK_WORDS):
+            continue
+        if low.split("?")[0].endswith((".png", ".jpg", ".jpeg", ".gif", ".svg")):
+            continue
+        return link
+    return None
+
+
 def _esc(value):
     return html.escape(str(value), quote=False)
 
@@ -316,7 +342,11 @@ def parse_service_email(msg, mailbox_email):
 
     # 1) شاهد
     if "shahid" in sender or "شاهد" in subject_lower or "shahid.mbc.net" in full_lower:
-        link = _pick_link(links, ["reset", "password", "forgot", "token", "login", "shahid.mbc.net"])
+        link = (
+            _pick_button_link(body_html, SHAHID_BUTTON_WORDS)
+            or _pick_link(links, ["reset", "password", "forgot", "token", "login", "shahid.mbc.net"])
+            or _first_clean_link(links)
+        )
         if link:
             text = f"📺 <b>رابط إعادة تعيين كلمة مرور شاهد وصل!</b>\n\n📧 <b>الحساب:</b>\n<code>{target}</code>"
             buttons = [
@@ -324,6 +354,7 @@ def parse_service_email(msg, mailbox_email):
                 [{"text": "🔗 فتح منصة شاهد", "url": "https://shahid.mbc.net/ar"}],
             ]
             return text, buttons
+        log.warning("Shahid email detected but no usable link found (links=%d)", len(links))
 
     # 2) كرانشي رول
     if "crunchyroll" in sender or "crunchyroll" in subject_lower:
