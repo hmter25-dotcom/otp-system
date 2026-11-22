@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'unsafe-inline'; connect-src https://otp-private-j87d.onrender.com; base-uri 'none'; form-action 'none'">
+<title>بوابة أكواد ديزني</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; min-height:100dvh; display:grid; place-items:center;
+    padding:18px; background:#070b14; color:#fff; font-family:'Cairo',sans-serif;
+  }
+  .box{
+    width:min(430px, 100%); background:#0f172a;
+    border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:24px 20px;
+    text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.55);
+  }
+  h1{ margin:0 0 8px; font-size:1.4rem; font-weight:800; }
+  .desc{ margin:0 0 20px; color:#94a3b8; font-size:.9rem; line-height:1.6; }
+  label{ display:block; text-align:right; margin-bottom:8px; font-size:.9rem; font-weight:700; color:#e2e8f0; }
+  input{
+    width:100%; padding:13px 14px; border-radius:12px; margin-bottom:14px;
+    border:1px solid rgba(255,255,255,.15); background:#070b14; color:#fff;
+    font-family:'Cairo',sans-serif; font-size:1rem; direction:ltr; text-align:left;
+  }
+  input:focus{ outline:none; border-color:#16a34a; }
+  .btn{
+    width:100%; border:0; border-radius:12px; padding:13px 16px;
+    background:#16a34a; color:#fff; font-family:'Cairo',sans-serif;
+    font-size:1rem; font-weight:800; cursor:pointer;
+  }
+  .btn:focus-visible, .copy:focus-visible, .tg a:focus-visible{ outline:2px solid #4ade80; outline-offset:2px; }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; }
+  .status{ margin-top:14px; min-height:1.5em; font-size:.92rem; color:#94a3b8; }
+  .err{ color:#f87171; }
+  .result{
+    margin-top:16px; background:#070b14; border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:16px;
+  }
+  .code{ font-size:2rem; font-weight:800; letter-spacing:5px; margin:8px 0 12px; direction:ltr; color:#4ade80; word-break:break-all; }
+  .copy{
+    border:1px solid rgba(255,255,255,.22); background:#1e293b; color:#fff;
+    padding:8px 16px; border-radius:10px; cursor:pointer; font-family:'Cairo',sans-serif;
+  }
+  .hint{ font-size:.8rem; color:#64748b; margin-top:10px; }
+  .tg{ margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,.08); }
+  .tg .lbl{ font-size:.86rem; color:#94a3b8; }
+  .tg a{
+    display:inline-block; margin-top:8px; padding:9px 18px; border-radius:10px;
+    background:#0ea5e9; color:#fff; text-decoration:none; font-weight:700; font-size:.9rem;
+  }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<main class="box">
+  <h1>بوابة أكواد ديزني</h1>
+  <p class="desc">أدخل البريد الإلكتروني الخاص بحساب ديزني لاستخراج رمز التحقق.</p>
+
+  <label for="email">البريد الإلكتروني:</label>
+  <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off"
+         spellcheck="false" maxlength="254" placeholder="example@domain.com">
+
+  <button id="btn" class="btn" type="button">استخراج الرمز الآن</button>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <div id="result" class="result" hidden>
+    <div>رمز التحقق</div>
+    <div id="code" class="code" dir="ltr"></div>
+    <button id="copy" class="copy" type="button">نسخ الرمز</button>
+    <div id="copied" class="status" role="status" hidden></div>
+    <div class="hint">يختفي الرمز تلقائيًا بعد دقيقة لحمايتك.</div>
+  </div>
+
+  <div class="tg">
+    <div class="lbl">لو احتجت لأي مساعدة؟</div>
+    <a href="https://t.me/elevaraa" target="_blank" rel="noopener noreferrer">@elevaraa</a>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  const API = "https://otp-private-j87d.onrender.com/api/disney/code-by-email";
+  const REQUEST_TIMEOUT_MS = 30000;   // السيرفر المجاني قد يحتاج وقتاً ليصحى
+  const SLOW_NOTICE_MS     = 6000;
+  const COOLDOWN_MS        = 2500;
+  const RESULT_TTL_MS      = 60000;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const emailEl  = document.getElementById("email");
+  const btn      = document.getElementById("btn");
+  const statusEl = document.getElementById("status");
+  const resultEl = document.getElementById("result");
+  const codeEl   = document.getElementById("code");
+  const copyBtn  = document.getElementById("copy");
+  const copiedEl = document.getElementById("copied");
+
+  let busy = false;
+  let hideTimer = null;
+  let copiedTimer = null;
+
+  function setStatus(msg, isErr){
+    statusEl.textContent = msg;
+    statusEl.className = isErr ? "status err" : "status";
+  }
+
+  function hideResult(){
+    clearTimeout(hideTimer);
+    hideTimer = null;
+    codeEl.textContent = "";
+    copiedEl.hidden = true;
+    resultEl.hidden = true;
+  }
+
+  function showResult(code){
+    codeEl.textContent = code;
+    resultEl.hidden = false;
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      hideResult();
+      setStatus("انتهى وقت عرض الرمز.", false);
+    }, RESULT_TTL_MS);
+  }
+
+  async function run(){
+    if (busy) return;   // يمنع الإرسال المكرر عبر Enter
+
+    const email = emailEl.value.trim().toLowerCase();
+    if (!email){ setStatus("أدخل البريد الإلكتروني أولاً.", true); return; }
+    if (!EMAIL_RE.test(email)){ setStatus("صيغة البريد غير صحيحة.", true); return; }
+    if (!navigator.onLine){ setStatus("لا يوجد اتصال بالإنترنت.", true); return; }
+
+    busy = true;
+    btn.disabled = true;
+    hideResult();
+    setStatus("جاري استخراج الرمز...", false);
+
+    const ctrl = new AbortController();
+    const abortTimer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+    const slowTimer  = setTimeout(
+      () => setStatus("السيرفر يستيقظ، قد يستغرق الأمر لحظات...", false),
+      SLOW_NOTICE_MS
+    );
+
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        mode: "cors",
+        credentials: "omit",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ email }),
+        signal: ctrl.signal
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+
+      if (res.ok && data.status === "success" && data.code){
+        showResult(String(data.code));
+        setStatus("", false);
+      } else if (res.ok && data.status === "waiting"){
+        setStatus("لم يصل الرمز بعد (أو البريد غير مسجل). اطلبه من ديزني ثم حاول مجدداً.", false);
+      } else if (res.status === 429){
+        setStatus(data.message || "محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة.", true);
+      } else {
+        setStatus(data.message || "تعذر جلب الرمز.", true);
+      }
+    } catch (e){
+      setStatus(
+        e && e.name === "AbortError"
+          ? "انتهت مهلة الطلب، حاول مجدداً."
+          : "تعذر الاتصال بالسيرفر.",
+        true
+      );
+    } finally {
+      clearTimeout(abortTimer);
+      clearTimeout(slowTimer);
+      setTimeout(() => { busy = false; btn.disabled = false; }, COOLDOWN_MS);
+    }
+  }
+
+  btn.addEventListener("click", run);
+  emailEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){ e.preventDefault(); run(); }
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    const val = codeEl.textContent.trim();
+    if (!val) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(val); ok = true; } catch (_) {}
+    copiedEl.textContent = ok ? "تم النسخ" : "تعذر النسخ، انسخ الرمز يدويًا.";
+    copiedEl.className = ok ? "status" : "status err";
+    copiedEl.hidden = false;
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => { copiedEl.hidden = true; }, 1500);
+  });
+})();
+</script>
+</body>
+</html>
