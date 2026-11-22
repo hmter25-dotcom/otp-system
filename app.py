@@ -1,4 +1,4 @@
-"""Elevaraa Core Unified Server (API Mode for Custom Domain) - hardened build v2.
+"""Elevaraa Core Unified Server (API Mode for Custom Domain) - hardened build v3.
 
 Run in production (single process, many threads, keeps in-memory limiters accurate):
     gunicorn -w 1 --threads 8 -b 0.0.0.0:$PORT server:app
@@ -107,9 +107,14 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         data_dir = _env("DATA_DIR", ".")
-        os.makedirs(data_dir, exist_ok=True)
+        try:
+            os.makedirs(data_dir, exist_ok=True)
+        except OSError:
+            log.exception("Could not create DATA_DIR %s", data_dir)
         backup_dir = _env("BACKUP_DIR", os.path.join(data_dir, "backups"))
         origins = tuple(o.strip() for o in _env("ALLOWED_ORIGINS", "*").split(",") if o.strip())
+        if not _env("DISNEY_DB_PATH"):
+            os.environ["DISNEY_DB_PATH"] = os.path.join(data_dir, "disney_otp.sqlite3")
         return cls(
             admin_password=_env("ADMIN_PASSWORD"),
             email_account=_env("EMAIL_ACCOUNT"),
@@ -119,6 +124,8 @@ class Settings:
             youtube_secret=_env("YOUTUBE_SECRET"),
             youtube_email=_env("YOUTUBE_EMAIL"),
             youtube_pass=_env("YOUTUBE_PASS"),
+            imap_server=_env("IMAP_SERVER", cls.imap_server),
+            imap_port=_env_int("IMAP_PORT", cls.imap_port),
             imap_timeout=_env_int("IMAP_TIMEOUT", 15),
             data_dir=data_dir,
             blocklist_file=os.path.join(data_dir, "blocked_subs.json"),
@@ -171,6 +178,7 @@ OSN_SCAN_LIMIT = 15
 MAX_BULK_LINKS = 50
 YT_LIST_LIMIT = 50
 MAX_BODY_CHARS = 500_000  # cap on text scanned per email
+STALE_TMP_SECONDS = 3600  # leftover *.tmp files older than this are removed at startup
 
 # --------------------------------------------------------------------------- #
 # App
@@ -180,7 +188,16 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
 app.json.ensure_ascii = False
 if settings.trust_proxy:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
-CORS(app, resources={r"/*": {"origins": "*" if "*" in settings.allowed_origins else list(settings.allowed_origins)}})
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": "*" if "*" in settings.allowed_origins else list(settings.allowed_origins),
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Accept", "X-Admin-Password"],
+        }
+    },
+)
 
 try:
     from canva import canva_bp
@@ -199,9 +216,27 @@ try:
 except Exception:
     log.exception("Telegram bot module import error")
 
+# --- ربط مسارات ديزني (Disney OTP Blueprint) ---
+try:
+    from disney_otp import disney_otp_bp
 
-def error(message: str, status: int):
-    return jsonify({"status": "error", "message": message}), status
+    @disney_otp_bp.route("/api/disney/code-by-email", methods=["OPTIONS"])
+    def _disney_code_by_email_preflight():
+        return ("", 204)
+
+    app.register_blueprint(disney_otp_bp)
+except ImportError:
+    log.warning("disney_otp module not found")
+except Exception:
+    log.exception("Failed to register disney_otp blueprint")
+
+
+def error(message: str, status: int, headers: dict[str, str] | None = None):
+    resp = jsonify({"status": "error", "message": message})
+    resp.status_code = status
+    if headers:
+        resp.headers.update(headers)
+    return resp
 
 
 @app.errorhandler(Exception)
@@ -255,7 +290,10 @@ class SlidingWindowLimiter:
 
     def is_limited(self, key: str) -> bool:
         with self._lock:
-            return len(self._prune(key, time.monotonic()) or ()) >= self.max_events
+            now = time.monotonic()
+            limited = len(self._prune(key, now) or ()) >= self.max_events
+            self._maybe_sweep(now)
+            return limited
 
     def record(self, key: str) -> None:
         with self._lock:
@@ -287,12 +325,16 @@ def client_ip() -> str:
     return request.remote_addr or "unknown"
 
 
+def _retry_after(limiter: SlidingWindowLimiter) -> dict[str, str]:
+    return {"Retry-After": str(limiter.window)}
+
+
 def rate_limited(limiter: SlidingWindowLimiter | None) -> Callable:
     def decorator(view: Callable) -> Callable:
         @wraps(view)
         def wrapper(*args: Any, **kwargs: Any):
             if limiter is not None and not limiter.hit(client_ip()):
-                return error("محاولات كثيرة، حاول لاحقاً.", 429)
+                return error("محاولات كثيرة، حاول لاحقاً.", 429, _retry_after(limiter))
             return view(*args, **kwargs)
 
         return wrapper
@@ -321,7 +363,7 @@ def admin_required(unauthorized_message: str) -> Callable:
                 return error("Admin access is not configured", 503)
             ip = client_ip()
             if admin_limiter.is_limited(ip):
-                return error("محاولات كثيرة، حاول لاحقاً.", 429)
+                return error("محاولات كثيرة، حاول لاحقاً.", 429, _retry_after(admin_limiter))
             data = request.get_json(silent=True)
             if not isinstance(data, dict):
                 data = {}
@@ -340,7 +382,7 @@ def admin_required(unauthorized_message: str) -> Callable:
 
 
 # --------------------------------------------------------------------------- #
-# JSON storage (atomic write + .bak copy + auto-restore + dir fsync)
+# JSON storage (atomic write + .bak copy + auto-restore + dir fsync + read cache)
 # --------------------------------------------------------------------------- #
 def _fsync_dir(directory: str) -> None:
     if os.name == "nt":
@@ -355,9 +397,28 @@ def _fsync_dir(directory: str) -> None:
         pass
 
 
+def _cleanup_stale_tmp(directory: str) -> None:
+    """Remove orphaned temp files left behind by a crash mid-write."""
+    cutoff = time.time() - STALE_TMP_SECONDS
+    try:
+        for name in os.listdir(directory):
+            if not name.endswith(".tmp"):
+                continue
+            path = os.path.join(directory, name)
+            try:
+                if os.path.isfile(path) and os.path.getmtime(path) < cutoff:
+                    os.unlink(path)
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
 class JsonStore:
     def __init__(self, path: str, default: Any):
         self.path, self.default, self._lock = path, default, threading.Lock()
+        self._cache: tuple[tuple, Any] | None = None
+        self._cache_lock = threading.Lock()
 
     @property
     def bak_path(self) -> str:
@@ -375,6 +436,13 @@ class JsonStore:
                     yield
                 finally:
                     fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+    def _signature(self) -> tuple | None:
+        try:
+            st = os.stat(self.path)
+        except OSError:
+            return None
+        return (st.st_ino, st.st_mtime_ns, st.st_size)
 
     def _load_file(self, path: str) -> Any:
         with open(path, "r", encoding="utf-8") as f:
@@ -408,9 +476,15 @@ class JsonStore:
             return self._load_file(self.path)
         except FileNotFoundError:
             pass
-        except (OSError, ValueError):
-            log.exception("Failed reading %s", self.path)
+        except ValueError:
+            # Only genuinely corrupt content is quarantined (JSON errors, wrong type).
+            log.exception("Corrupt data in %s", self.path)
             self._quarantine()
+        except OSError:
+            # Transient I/O problem (permissions, fd exhaustion...): never move or
+            # overwrite good data because of it - fail this request instead.
+            log.exception("I/O error reading %s", self.path)
+            raise
         restored = self._restore_backup()
         return restored if restored is not None else copy.deepcopy(self.default)
 
@@ -442,8 +516,17 @@ class JsonStore:
             raise
 
     def load(self) -> Any:
+        sig = self._signature()
+        if sig is not None:
+            with self._cache_lock:
+                if self._cache and self._cache[0] == sig:
+                    return copy.deepcopy(self._cache[1])
         with self._guard():
-            return self._read()
+            data = self._read()
+            sig = self._signature()
+            with self._cache_lock:
+                self._cache = (sig, copy.deepcopy(data)) if sig else None
+        return data
 
     def save(self, data: Any) -> None:
         with self._guard():
@@ -485,8 +568,30 @@ def clean_sub_id(raw: Any) -> str:
 # --------------------------------------------------------------------------- #
 # YouTube link database
 # --------------------------------------------------------------------------- #
+_yt_ready = False
+_yt_init_lock = threading.Lock()
+
+
+def init_yt_db() -> None:
+    """Create the schema once. Retried lazily if the first attempt failed."""
+    global _yt_ready
+    with _yt_init_lock:
+        if _yt_ready:
+            return
+        conn = sqlite3.connect(settings.youtube_db, timeout=10)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("CREATE TABLE IF NOT EXISTS links (token TEXT PRIMARY KEY, used INTEGER NOT NULL DEFAULT 0)")
+            conn.commit()
+        finally:
+            conn.close()
+        _yt_ready = True
+
+
 @contextmanager
 def yt_db() -> Iterator[sqlite3.Connection]:
+    if not _yt_ready:
+        init_yt_db()
     conn = sqlite3.connect(settings.youtube_db, timeout=10)
     conn.row_factory = sqlite3.Row
     try:
@@ -501,16 +606,10 @@ def yt_db() -> Iterator[sqlite3.Connection]:
         conn.close()
 
 
-def init_yt_db() -> None:
-    try:
-        with yt_db() as conn:
-            conn.execute("PRAGMA journal_mode=WAL")
-            conn.execute("CREATE TABLE IF NOT EXISTS links (token TEXT PRIMARY KEY, used INTEGER NOT NULL DEFAULT 0)")
-    except Exception:
-        log.exception("Could not initialise YouTube DB at %s", settings.youtube_db)
-
-
-init_yt_db()
+try:
+    init_yt_db()
+except Exception:
+    log.exception("Could not initialise YouTube DB at %s (will retry on first use)", settings.youtube_db)
 
 
 def claim_yt_token(token: str) -> bool:
@@ -529,7 +628,7 @@ def create_yt_tokens(count: int) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
-# Automatic snapshots (JSON files + consistent SQLite copy)
+# Automatic snapshots (JSON files + consistent SQLite copy), published atomically
 # --------------------------------------------------------------------------- #
 _backup_lock = threading.Lock()
 
@@ -538,28 +637,48 @@ def snapshot_data() -> str | None:
     """Create a timestamped snapshot folder; prune old ones. Returns folder name."""
     with _backup_lock:
         stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
-        dest = os.path.join(settings.backup_dir, stamp)
+        final = os.path.join(settings.backup_dir, stamp)
+        staging = os.path.join(settings.backup_dir, f".tmp-{stamp}-{os.getpid()}")
         try:
-            os.makedirs(dest, exist_ok=True)
-            blocked_store.snapshot_to(dest)
-            mappings_store.snapshot_to(dest)
+            shutil.rmtree(staging, ignore_errors=True)
+            os.makedirs(staging, exist_ok=True)
+            blocked_store.snapshot_to(staging)
+            mappings_store.snapshot_to(staging)
             if os.path.exists(settings.youtube_db):
                 src = sqlite3.connect(settings.youtube_db, timeout=10)
-                dst = sqlite3.connect(os.path.join(dest, "youtube_links.db"))
                 try:
-                    src.backup(dst)  # safe while the DB is in use
+                    dst = sqlite3.connect(os.path.join(staging, "youtube_links.db"))
+                    try:
+                        src.backup(dst)  # safe while the DB is in use
+                    finally:
+                        dst.close()
                 finally:
-                    dst.close()
                     src.close()
+            # Publish only complete snapshots (a crash mid-way never leaves a half-snapshot).
+            if os.path.exists(final):
+                shutil.rmtree(final, ignore_errors=True)
+            os.replace(staging, final)
+            _fsync_dir(settings.backup_dir)
+
+            entries = os.listdir(settings.backup_dir)
+            for name in entries:
+                if name.startswith(".tmp-") and os.path.join(settings.backup_dir, name) != staging:
+                    path = os.path.join(settings.backup_dir, name)
+                    try:
+                        if time.time() - os.path.getmtime(path) > STALE_TMP_SECONDS:
+                            shutil.rmtree(path, ignore_errors=True)
+                    except OSError:
+                        pass
             snaps = sorted(
-                d for d in os.listdir(settings.backup_dir)
-                if os.path.isdir(os.path.join(settings.backup_dir, d))
+                d for d in entries
+                if not d.startswith(".") and os.path.isdir(os.path.join(settings.backup_dir, d))
             )
             for old in snaps[: -settings.backup_keep]:
                 shutil.rmtree(os.path.join(settings.backup_dir, old), ignore_errors=True)
             return stamp
         except Exception:
             log.exception("Snapshot failed")
+            shutil.rmtree(staging, ignore_errors=True)
             return None
 
 
@@ -743,7 +862,7 @@ NETFLIX_ENDPOINTS = (
     NetflixEndpoint("temp_code", "temp-code", ("code", "tempCode"), ("email",)),
     NetflixEndpoint("login_code", "login-verification-code", ("code", "loginVerificationCode", "url"), ("email",)),
 )
-_netflix_pool = ThreadPoolExecutor(max_workers=6, thread_name_prefix="netflix")
+_netflix_pool = ThreadPoolExecutor(max_workers=12, thread_name_prefix="netflix")
 atexit.register(_netflix_pool.shutdown, wait=False)
 
 
@@ -773,7 +892,7 @@ def get_netflix():
     if sub_id in {blocked_id(b) for b in load_blocked()}:
         return jsonify({"status": "blocked", "message": "انتهت صلاحية هذا الرابط."}), 403
 
-    bk = load_mappings().get(sub_id, sub_id)
+    bk = str(load_mappings().get(sub_id, sub_id))
     result: dict[str, Any] = {
         "status": "success", "email": None, "signin_code": None,
         "temp_code": None, "login_code": None, "approval_url": None,
@@ -790,6 +909,7 @@ def get_netflix():
         try:
             out = future.result(timeout=wait)
         except Exception:
+            future.cancel()  # don't leave queued work running for a request that gave up
             log.warning("Netflix endpoint %s timed out or crashed", ep.path, exc_info=True)
             continue
         if out:
@@ -804,7 +924,7 @@ def get_netflix():
 
 
 # --------------------------------------------------------------------------- #
-# Disney
+# Disney (legacy IMAP alias endpoint)
 # --------------------------------------------------------------------------- #
 @lru_cache(maxsize=4)
 def _disney_alias_pattern(account: str) -> re.Pattern[str]:
@@ -856,7 +976,7 @@ def youtube_magic_link_api(token: str):
         return error("الخدمة غير مفعّلة", 503)
     ip = client_ip()
     if yt_limiter.is_limited(ip):
-        return error("محاولات كثيرة، حاول لاحقاً.", 429)
+        return error("محاولات كثيرة، حاول لاحقاً.", 429, _retry_after(yt_limiter))
     try:
         valid = bool(TOKEN_PATTERN.fullmatch(token)) and claim_yt_token(token)
     except sqlite3.Error:
@@ -905,11 +1025,13 @@ def admin_revoke_and_issue(data: dict):
         return error("الرابط مطلوب", 400)
     new_sub_id = str(uuid.uuid4())
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %I:%M %p")
-    with blocked_store.transaction() as blocked, mappings_store.transaction() as mappings:
+    # Order matters: the mapping is written first. If the second write failed, the worst
+    # case is an unused mapping - never a blocked link with no replacement issued.
+    with mappings_store.transaction() as mappings, blocked_store.transaction() as blocked:
         original_target = mappings.get(current_sub, current_sub)
+        mappings[new_sub_id] = original_target
         blocked[:] = [b for b in blocked if blocked_id(b) != current_sub]
         blocked.insert(0, {"id": current_sub, "date": stamp})
-        mappings[new_sub_id] = original_target
     return jsonify({
         "status": "success",
         "new_sub_id": new_sub_id,
@@ -967,6 +1089,7 @@ def _startup_checks() -> None:
         log.error("DATA_DIR %s is not writable - data will NOT be saved!", settings.data_dir)
     if settings.data_dir in (".", ""):
         log.warning("DATA_DIR is the working directory. Use a persistent volume to avoid data loss on redeploy.")
+    _cleanup_stale_tmp(settings.data_dir)
 
 
 _startup_checks()
